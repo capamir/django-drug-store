@@ -1,0 +1,50 @@
+<!-- templates/users/dashboard.html -->
+{% extends 'base.html' %} {% block title %}داشبورد{% endblock %} {% block
+content %}
+<div class="row">
+  <div class="col-12">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>خوش آمدید، {{ user.get_full_name }}!</h2>
+      <a href="{% url 'logout' %}" class="btn btn-outline-danger">خروج</a>
+    </div>
+
+    <div class="row">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">📱 اطلاعات حساب</h5>
+            <p><strong>شماره موبایل:</strong> {{ user.phone_number }}</p>
+            <p>
+              <strong>وضعیت تایید:</strong>
+              {% if user.is_phone_verified %}
+              <span class="badge bg-success">تایید شده</span>
+              {% else %}
+              <span class="badge bg-warning">تایید نشده</span>
+              {% endif %}
+            </p>
+            <p>
+              <strong>تاریخ عضویت:</strong> {{ user.date_joined|date:"Y/m/d H:i"
+              }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">🚀 مرحله بعدی</h5>
+            <p>سیستم مدیریت موجودی در حال توسعه است...</p>
+            <ul>
+              <li>✅ سیستم احراز هویت</li>
+              <li>⏳ مدیریت محصولات</li>
+              <li>⏳ سیستم موجودی</li>
+              <li>⏳ پرداخت آنلاین</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
