@@ -1,5 +1,6 @@
 # product/models.py
 from django.db import models
+from django.core.validators import MinValueValidator, MaxValueValidator
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -28,6 +29,23 @@ class Product(models.Model):
     barcode = models.CharField(max_length=50, blank=True)
     is_active = models.BooleanField(default=True)
 
+    discount_percent = models.PositiveIntegerField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text='تخفیف درصدی روی قیمت فروش (از 0 تا 100)'
+    )
+    discount_per_unit = models.BigIntegerField(
+        default=0,
+        help_text='تخفیف عددی ثابت به ازای هر واحد کالا (به ریال)'
+    )
+
+    @property
+    def effective_unit_price(self):
+        """Calculate discounted price based on discount_percent and discount_per_unit."""
+        price_after_percent = self.unit_price * (100 - self.discount_percent) // 100
+        price_after_discount = max(0, price_after_percent - self.discount_per_unit)
+        return price_after_discount
+    
     def __str__(self):
         return self.name
 
