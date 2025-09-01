@@ -28,7 +28,14 @@ class Product(models.Model):
     sku = models.CharField(max_length=50, unique=True)
     barcode = models.CharField(max_length=50, blank=True)
     is_active = models.BooleanField(default=True)
-
+    recommended = models.BooleanField(default=False, help_text="آیا این محصول پیشنهادی است؟")
+    related_products = models.ManyToManyField(
+        'self',
+        blank=True,
+        symmetrical=False,
+        related_name='related_to',
+        help_text="محصولات مرتبط یا پیشنهادی برای نمایش"
+    )
     discount_percent = models.PositiveIntegerField(
         default=0,
         validators=[MinValueValidator(0), MaxValueValidator(100)],
