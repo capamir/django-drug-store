@@ -1,0 +1,96 @@
+{% load static %}
+<!-- =======================
+Trending courses START -->
+<section class="pt-0 pt-md-5">
+  <div class="container">
+    <!-- Title -->
+    <div class="row">
+      <div class="col-lg-8 mb-4">
+        <h2 class="mb-0">
+          محصولات <span class="text-warning">پیشنهادی </span> لقمان
+        </h2>
+        <p class="mb-0">مشاهده محصولات جدید و 🔥 در جشنواره</p>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      {% for product in recommended_products %}
+      <!-- Card Item START -->
+      <div class="col-md-6 col-xl-4">
+        <div class="card p-2 shadow h-100">
+          <div class="rounded-top overflow-hidden">
+            <div class="card-overlay-hover">
+              <!-- Image -->
+              {% if product.image %}
+                <img
+                  src="{{ product.image.url }}"
+                  class="card-img-top"
+                  alt="{{ product.name }}"
+                />
+              {% else %}
+                <img
+                  src="{% static 'assets/images/courses/4by3/17.jpg' %}"
+                  class="card-img-top"
+                  alt="{{ product.name }}"
+                />
+              {% endif %}
+            </div>
+            <!-- Hover element -->
+            <div class="card-img-overlay">
+              <div class="card-element-hover d-flex justify-content-end">
+                <form method="post" action="{% url 'orders:cart_add' product.id %}">
+                  {% csrf_token %}
+                  <input type="hidden" name="quantity" value="1">
+                  <button type="submit" class="icon-md bg-white rounded-circle text-center border-0">
+                    <i class="fas fa-shopping-cart text-danger"></i>
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          <!-- Card body -->
+          <div class="card-body">
+            <!-- Title -->
+            <h5 class="card-title fw-normal">
+              <a href="{% url 'products:product_detail' slug=product.slug %}">{{ product.name }}</a>
+            </h5>
+            <!-- Badge and Price -->
+            <div class="d-flex justify-content-between align-items-center mb-0">
+              {% if product.category %}
+                <a href="{% url 'products:category_detail' slug=product.category.slug %}" class="badge bg-info bg-opacity-10 text-info me-2">
+                  <i class="fas fa-circle small fw-bold"></i> {{ product.category.name }}
+                </a>
+              {% endif %}
+              <!-- Price -->
+              <div class="text-end">
+                {% if product.discount_percent > 0 or product.discount_per_unit > 0 %}
+                  <span class="text-decoration-line-through text-muted small">{{ product.unit_price|floatformat:0 }} ریال</span><br>
+                  <h3 class="text-success mb-0 fs-5 fw-normal">{{ product.effective_unit_price|floatformat:0 }} ریال</h3>
+                {% else %}
+                  <h3 class="text-success mb-0 fs-5 fw-normal">{{ product.unit_price|floatformat:0 }} ریال</h3>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Card Item END -->
+      {% empty %}
+      <div class="col-12">
+        <div class="alert alert-info text-center">
+          <p class="mb-0">در حال حاضر محصول پیشنهادی وجود ندارد.</p>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    
+    <!-- Button -->
+    <div class="text-center mt-5">
+      <a href="{% url 'products:product_list' %}" class="btn btn-primary-soft mb-0">
+        مشاهده همه<i class="fas fa-sync ms-2"></i>
+      </a>
+    </div>
+  </div>
+</section>
+<!-- =======================
+Trending courses END -->

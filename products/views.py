@@ -1,6 +1,7 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
+from django.db import models
 from .models import Product, Category
 from .forms import ProductForm, CategoryForm
 
@@ -11,6 +12,13 @@ class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
 
 class HomeView(TemplateView):
     template_name = "products/Home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['recommended_products'] = Product.objects.recommended()[:6]
+        context['discounted_products'] = Product.objects.discounted()[:12]
+
+        return context
 
 class ProductListView(ListView):
     model = Product

@@ -1,78 +1,109 @@
 {% load static %}
 <!-- =======================
 Event START -->
-      <section class="pb-0 pb-md-5">
-        <div class="container">
-          <!-- Title -->
-          <div class="row mb-4">
-            <h2 class="mb-0">
-              تخفیفات <span class="text-warning">ویژه</span> لقمان
-            </h2>
-          </div>
-          <div class="row">
-            <!-- Slider START -->
-            <div
-              class="tiny-slider arrow-round arrow-creative arrow-blur arrow-hover"
-            >
+<section class="pb-0 pb-md-5">
+  <div class="container">
+    <!-- Title -->
+    <div class="row mb-4">
+      <h2 class="mb-0">تخفیفات <span class="text-warning">ویژه</span> لقمان</h2>
+    </div>
+    <div class="row">
+      {% if discounted_products %}
+      <!-- Slider START -->
+      <div
+        class="tiny-slider arrow-round arrow-creative arrow-blur arrow-hover"
+      >
+        <div
+          class="tiny-slider-inner"
+          data-autoplay="false"
+          data-arrow="true"
+          data-dots="false"
+          data-items-xl="3"
+          data-items-md="2"
+          data-items-xs="1"
+        >
+          {% for product in discounted_products %}
+          <!-- Card item START -->
+          <div class="card bg-transparent">
+            <div class="position-relative">
+              <!-- Image -->
+              {% if product.image %}
+                <img
+                  src="{{ product.image.url }}"
+                  class="card-img"
+                  alt="{{ product.name }}"
+                />
+              {% else %}
+                <img
+                  src="{% static 'assets/images/courses/4by3/21.jpg' %}"
+                  class="card-img"
+                  alt="{{ product.name }}"
+                />
+              {% endif %}
+              
+              <!-- Overlay -->
               <div
-                class="tiny-slider-inner"
-                data-autoplay="false"
-                data-arrow="true"
-                data-dots="false"
-                data-items-xl="3"
-                data-items-md="2"
-                data-items-xs="1"
+                class="card-img-overlay d-flex align-items-start flex-column p-3"
               >
-                <!-- Card item START -->
-                <div class="card bg-transparent">
-                  <div class="position-relative">
-                    <!-- Image -->
-                    <img
-                      src="{% static 'assets/images/courses/4by3/21.jpg' %}"
-                      class="card-img"
-                      alt="course image"
-                    />
-                    <!-- Overlay -->
-                    <div
-                      class="card-img-overlay d-flex align-items-start flex-column p-3"
-                    >
-                      <div class="w-100 mt-auto">
-                        <!-- Category -->
-                        <a href="#" class="badge text-bg-white fs-6 rounded-1"
-                          ><i class="far fa-calendar-alt text-orange me-2"></i
-                          >26 شهریور 1400</a
-                        >
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Card body -->
-                  <div class="card-body px-2">
-                    <!-- Title -->
-                    <h5 class="card-title fw-normal">
-                      <a href="#">آموزش برنامه نویسی متلب MATLAB</a>
-                    </h5>
-                    <!-- Address and button -->
-                    <div
-                      class="d-flex justify-content-between align-items-center"
-                    >
-                      <address class="mb-0">
-                        <i class="fas fa-map-marker-alt me-2"></i>مجتمع فنی
-                        تهران
-                      </address>
-                      <a href="#" class="btn btn-sm btn-primary-soft mb-0"
-                        >ثبت نام</a
-                      >
-                    </div>
-                  </div>
+                <!-- Discount Badge -->
+                <div class="badge bg-danger text-white fs-6 rounded-1 mb-2">
+                  {% if product.discount_percent > 0 %}
+                    %{{ product.discount_percent }} تخفیف
+                  {% else %}
+                    {{ product.discount_per_unit|floatformat:0 }} ریال تخفیف
+                  {% endif %}
                 </div>
-                <!-- Card item END -->
-
+                
+                <div class="w-100 mt-auto">
+                  <!-- Category -->
+                  {% if product.category %}
+                    <a href="{% url 'products:category_detail' slug=product.category.slug %}" class="badge text-bg-white fs-6 rounded-1">
+                      <i class="fas fa-tag text-orange me-2"></i>{{ product.category.name }}
+                    </a>
+                  {% endif %}
+                </div>
               </div>
             </div>
-            <!-- Slider END -->
+
+            <!-- Card body -->
+            <div class="card-body px-2">
+              <!-- Title -->
+              <h5 class="card-title fw-normal">
+                <a href="{% url 'products:product_detail' slug=product.slug %}">{{ product.name }}</a>
+              </h5>
+              
+              <!-- Price and Add to Cart -->
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="price-section">
+                  <span class="text-decoration-line-through text-muted small">{{ product.unit_price|floatformat:0 }} ریال</span><br>
+                  <span class="text-success fw-bold">{{ product.effective_unit_price|floatformat:0 }} ریال</span>
+                </div>
+                
+                <form method="post" action="{% url 'orders:cart_add' product.id %}" class="d-inline">
+                  {% csrf_token %}
+                  <input type="hidden" name="quantity" value="1">
+                  <button type="submit" class="btn btn-sm btn-primary-soft mb-0">
+                    <i class="fas fa-shopping-cart me-1"></i>افزودن
+                  </button>
+                </form>
+              </div>
+            </div>
           </div>
+          <!-- Card item END -->
+          {% endfor %}
         </div>
-      </section>
-      <!-- =======================
+      </div>
+      <!-- Slider END -->
+      {% else %}
+      <!-- No discounted products message -->
+      <div class="col-12">
+        <div class="alert alert-info text-center">
+          <h5 class="text-muted mb-0">در حال حاضر محصولی با تخفیف وجود ندارد</h5>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+<!-- =======================
 Event END -->
