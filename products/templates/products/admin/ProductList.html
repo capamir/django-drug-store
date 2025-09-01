@@ -1,0 +1,258 @@
+{% extends "admin-base.html" %}
+{% block content %}
+    <!-- Title -->
+    <div class="row mb-3">
+    <div class="col-12 d-sm-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-2 mb-sm-0 fs-5">لیست محصولات</h1>
+        <a href="" class="btn btn-sm btn-primary mb-0">
+        افزودن محصول
+        </a>
+    </div>
+    </div>
+
+    <!-- Product boxes START -->
+    <div class="row g-4 mb-4">
+    <!-- Product item -->
+    <div class="col-sm-6 col-lg-4">
+        <div
+        class="text-center p-4 bg-primary bg-opacity-10 border border-primary rounded-3"
+        >
+        <h6>کل محصولات</h6>
+        <h2 class="mb-0 fs-1 text-primary">{{ total_products }}</h2>
+        </div>
+    </div>
+
+    <!-- Product item -->
+    <div class="col-sm-6 col-lg-4">
+        <div
+        class="text-center p-4 bg-success bg-opacity-10 border border-success rounded-3"
+        >
+        <h6>محصولات فعال</h6>
+        <h2 class="mb-0 fs-1 text-success">{{ active_products }}</h2>
+        </div>
+    </div>
+
+    <!-- Product item -->
+    <div class="col-sm-6 col-lg-4">
+        <div
+        class="text-center p-4 bg-warning bg-opacity-15 border border-warning rounded-3"
+        >
+        <h6>محصولات پیشنهادی</h6>
+        <h2 class="mb-0 fs-1 text-warning">{{ recommended_products_count }}</h2>
+        </div>
+    </div>
+    </div>
+    <!-- Product boxes END -->
+
+    <!-- Card START -->
+    <div class="card bg-transparent border">
+    <!-- Card header START -->
+    <div class="card-header bg-light border-bottom">
+        <!-- Search and select START -->
+        <div class="row g-3 align-items-center justify-content-between">
+        <!-- Search bar -->
+        <div class="col-md-8">
+            <form class="rounded position-relative">
+            <input
+                class="form-control bg-body"
+                type="search"
+                placeholder="جستجوی محصول"
+                aria-label="Search"
+            />
+            <button
+                class="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset"
+                type="submit"
+            >
+                <i class="fas fa-search fs-6"></i>
+            </button>
+            </form>
+        </div>
+
+        <!-- Select option -->
+        <div class="col-md-3">
+            <!-- Sort by filter -->
+            <form>
+            <select
+                class="form-select js-choice border-0 z-index-9"
+                aria-label=".form-select-sm"
+            >
+                <option value="">مرتب سازی</option>
+                <option>جدیدترین</option>
+                <option>قدیمی ترین</option>
+                <option>فعال</option>
+                <option>غیرفعال</option>
+                <option>پیشنهادی</option>
+            </select>
+            </form>
+        </div>
+        </div>
+        <!-- Search and select END -->
+    </div>
+    <!-- Card header END -->
+
+    <!-- Card body START -->
+    <div class="card-body">
+        <!-- Product table START -->
+        <div class="table-responsive border-0 rounded-3">
+        <!-- Table START -->
+        <table class="table table-dark-gray align-middle p-4 mb-0 table-hover">
+            <!-- Table head -->
+            <thead>
+            <tr>
+                <th scope="col" class="border-0 rounded-start">نام محصول</th>
+                <th scope="col" class="border-0">دسته‌بندی</th>
+                <th scope="col" class="border-0">قیمت واحد</th>
+                <th scope="col" class="border-0">موجودی</th>
+                <th scope="col" class="border-0">پیشنهادی</th>
+                <th scope="col" class="border-0">وضعیت</th>
+                <th scope="col" class="border-0 rounded-end">عملیات</th>
+            </tr>
+            </thead>
+
+            <!-- Table body START -->
+            <tbody>
+            {% for product in products %}
+            <!-- Table row -->
+            <tr>
+                <!-- Product name and image -->
+                <td>
+                <div class="d-flex align-items-center position-relative">
+                    <!-- Image -->
+                    <div class="w-60px">
+                    {% if product.image %}
+                        <img
+                        src="{{ product.image.url }}"
+                        class="rounded"
+                        alt="{{ product.name }}"
+                        />
+                    {% else %}
+                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 40px;">
+                        <i class="fas fa-image text-muted"></i>
+                        </div>
+                    {% endif %}
+                    </div>
+                    <!-- Title -->
+                    <h6 class="table-responsive-title mb-0 ms-2">
+                    <a href="{% url 'products:admin_product_detail' product.id %}" class="stretched-link">
+                        {{ product.name }}
+                    </a>
+                    </h6>
+                </div>
+                </td>
+
+                <!-- Category -->
+                <td>
+                {% if product.category %}
+                    <span class="badge bg-info bg-opacity-15 text-info">
+                    {{ product.category.name }}
+                    </span>
+                {% else %}
+                    <span class="text-muted">-</span>
+                {% endif %}
+                </td>
+
+                <!-- Price -->
+                <td>{{ product.unit_price|floatformat:0 }} ریال</td>
+
+                <!-- Stock -->
+                <td>
+                {% if product.low_stock %}
+                    <span class="badge bg-danger">{{ product.quantity }}</span>
+                {% else %}
+                    {{ product.quantity }}
+                {% endif %}
+                </td>
+
+                <!-- Recommended -->
+                <td>
+                {% if product.recommended %}
+                    <span class="badge bg-success">بله</span>
+                {% else %}
+                    <span class="badge bg-secondary">خیر</span>
+                {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td>
+                {% if product.is_active %}
+                    <span class="badge bg-success bg-opacity-15 text-success">فعال</span>
+                {% else %}
+                    <span class="badge bg-danger bg-opacity-15 text-danger">غیرفعال</span>
+                {% endif %}
+                </td>
+
+                <!-- Actions -->
+                <td>
+                <a href="{% url 'products:admin_product_edit' product.id %}" class="btn btn-sm btn-primary-soft me-1 mb-1 mb-md-0">
+                    ویرایش
+                </a>
+                <button class="btn btn-sm btn-danger-soft mb-0" onclick="deleteProduct({{ product.id }})">
+                    حذف
+                </button>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                محصولی یافت نشد
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+            <!-- Table body END -->
+        </table>
+        <!-- Table END -->
+        </div>
+        <!-- Product table END -->
+    </div>
+    <!-- Card body END -->
+
+    <!-- Card footer START -->
+    <div class="card-footer bg-transparent pt-0">
+        <!-- Pagination START -->
+        {% if is_paginated %}
+        <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+        <!-- Content -->
+        <p class="mb-0 text-center text-sm-start">
+            نمایش {{ page_obj.start_index }} تا {{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+        </p>
+        <!-- Pagination -->
+        <nav class="d-flex justify-content-center mb-0" aria-label="navigation">
+            <ul class="pagination pagination-sm pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
+            {% if page_obj.has_previous %}
+            <li class="page-item mb-0">
+                <a class="page-link" href="?page={{ page_obj.previous_page_number }}" tabindex="-1">
+                <i class="fas fa-angle-right"></i>
+                </a>
+            </li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                <li class="page-item mb-0 active">
+                <a class="page-link" href="#">{{ num }}</a>
+                </li>
+                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                <li class="page-item mb-0">
+                <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            {% if page_obj.has_next %}
+            <li class="page-item mb-0">
+                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                <i class="fas fa-angle-left"></i>
+                </a>
+            </li>
+            {% endif %}
+            </ul>
+        </nav>
+        </div>
+        {% endif %}
+        <!-- Pagination END -->
+    </div>
+    <!-- Card footer END -->
+    </div>
+<!-- Card END -->
+{% endblock content %}

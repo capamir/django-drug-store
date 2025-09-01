@@ -6,6 +6,7 @@ app_name = 'products'
 urlpatterns = [
     # Product CRUD
     path('', views.HomeView.as_view(), name='home_page'),
+    path('dashboard/', views.AdminProductListView.as_view(), name='admin_page_product_list'),
 
     path('products/', views.ProductListView.as_view(), name='product_list'),
     path('<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),

@@ -1,13 +1,8 @@
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
-from django.db import models
 from .models import Product, Category
 from .forms import ProductForm, CategoryForm
-
-class AdminRequiredMixin(LoginRequiredMixin, UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_staff  # Or more detailed permission check
+from .mixins import AdminRequiredMixin 
 
 
 class HomeView(TemplateView):
@@ -19,6 +14,36 @@ class HomeView(TemplateView):
         context['discounted_products'] = Product.objects.discounted()[:12]
 
         return context
+
+
+class AdminProductListView(AdminRequiredMixin, ListView):
+    model = Product
+    template_name = "products/admin/ProductList.html"
+    context_object_name = "products"
+    paginate_by = 20  # Show 20 products per page
+    ordering = ['-id']  # Show newest products first
+
+    def get_queryset(self):
+        """Optimize queries with select_related for category"""
+        return Product.objects.select_related('category').all()
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Add product statistics
+        context['total_products'] = Product.objects.count()
+        context['active_products'] = Product.objects.filter(is_active=True).count()
+        context['recommended_products_count'] = Product.objects.filter(recommended=True).count()
+        
+        # Commented for future use
+        # context['inactive_products'] = Product.objects.filter(is_active=False).count()
+        # context['low_stock_products'] = Product.objects.filter(
+        #     quantity__lte=models.F('reorder_level')
+        # ).count()
+        
+        return context
+
+
 
 class ProductListView(ListView):
     model = Product
