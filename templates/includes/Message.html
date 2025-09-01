@@ -1,3 +1,4 @@
+{% load static %}
 <!-- message alert box START -->
 <div
   class="alert alert-light fade show position-fixed start-0 bottom-0 z-index-99 rounded-3 shadow p-4 ms-3 mb-3 col-10 col-md-4 col-lg-3 col-xxl-2"
@@ -5,7 +6,7 @@
 >
   <div class="text-dark text-center">
     <!-- Image -->
-    <img src="assets/images/element/27.svg" class="h-50px mb-3" alt="cookie" />
+    <img src="{% static 'assets/images/element/27.svg' %}" class="h-50px mb-3" alt="cookie" />
     <!-- Content -->
     <p class="mb-0">
       این وب سایت کوکی ها را در رایانه شما ذخیره می کند. برای کسب اطلاعات بیشتر

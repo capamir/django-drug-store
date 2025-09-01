@@ -1,3 +1,4 @@
+{% load static %}
 <!-- Header START -->
 <header class="navbar-light header-static navbar-sticky">
   <!-- Logo Nav START -->
@@ -7,12 +8,12 @@
       <a class="navbar-brand me-0" href="index.html">
         <img
           class="light-mode-item navbar-brand-item"
-          src="assets/images/logo.svg"
+          src="{% static 'assets/images/logo.svg' %}"
           alt="logo"
         />
         <img
           class="dark-mode-item navbar-brand-item"
-          src="assets/images/logo-light.svg"
+          src="{% static 'assets/images/logo-light.svg' %}"
           alt="logo"
         />
       </a>
@@ -246,7 +247,7 @@
         >
           <img
             class="avatar-img rounded-circle"
-            src="assets/images/avatar/01.jpg"
+            src="{% static 'assets/images/avatar/01.jpg' %}"
             alt="avatar"
           />
         </a>
@@ -261,7 +262,7 @@
               <div class="avatar me-3">
                 <img
                   class="avatar-img rounded-circle shadow"
-                  src="assets/images/avatar/01.jpg"
+                  src="{% static 'assets/images/avatar/01.jpg' %}"
                   alt="avatar"
                 />
               </div>
