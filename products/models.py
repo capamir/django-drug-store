@@ -1,6 +1,7 @@
 # product/models.py
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
+from .managers import ProductManager
 
 class Category(models.Model):
     name = models.CharField(max_length=50, unique=True)
@@ -45,6 +46,14 @@ class Product(models.Model):
         default=0,
         help_text='تخفیف عددی ثابت به ازای هر واحد کالا (به ریال)'
     )
+    image = models.ImageField(
+        upload_to='product_images/', 
+        blank=True, 
+        null=True, 
+        help_text='تصویر محصول'
+    )
+
+    objects = ProductManager()
 
     @property
     def effective_unit_price(self):
@@ -59,11 +68,6 @@ class Product(models.Model):
     @property
     def low_stock(self):
         return self.quantity <= self.reorder_level
-
-class ProductImage(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='product_images/')
-    is_default = models.BooleanField(default=False)
 
 
 class StockMovement(models.Model):
