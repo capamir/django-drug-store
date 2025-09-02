@@ -5,9 +5,14 @@ app_name = 'products'
 
 urlpatterns = [
     # Product CRUD
-    path('', views.HomeView.as_view(), name='home_page'),
-    path('dashboard/', views.AdminProductListView.as_view(), name='admin_page_product_list'),
-
+    path('', views.HomeView.as_view(), name='home'),
+    
+    path('dashboard/products/', views.AdminProductListView.as_view(), name='admin_product_list'),
+    path('dashboard/products/<int:product_id>/', views.AdminProductDetailView.as_view(), name='admin_product_detail'),
+    path('dashboard/products/create/', views.AdminProductCreateView.as_view(), name='admin_product_create'),
+    path('dashboard/products/<int:product_id>/edit/', views.AdminProductUpdateView.as_view(), name='admin_product_edit'),
+    path('dashboard/products/<int:product_id>/delete/', views.AdminProductDeleteView.as_view(), name='admin_product_delete'),
+    
     path('products/', views.ProductListView.as_view(), name='product_list'),
     path('<slug:slug>/', views.ProductDetailView.as_view(), name='product_detail'),
     path('products/create/', views.ProductCreateView.as_view(), name='product_create'),

@@ -3,11 +3,11 @@
 <nav class="navbar sidebar navbar-expand-xl navbar-dark bg-dark">
   <!-- Navbar brand for xl START -->
   <div class="d-flex align-items-center">
-    <a class="navbar-brand" href="index.html">
+    <a class="navbar-brand" href="{% url 'products:home' %}">
       <img
         class="navbar-brand-item"
         src="{% static 'assets/images/logo-light.svg' %}"
-        alt=""
+        alt="داروخانه آنلاین"
       />
     </a>
   </div>
@@ -22,110 +22,148 @@
     <div class="offcanvas-body sidebar-content d-flex flex-column bg-dark">
       <!-- Sidebar menu START -->
       <ul class="navbar-nav flex-column" id="navbar-sidebar">
-        <!-- Menu item 1 -->
+        <!-- Menu item 1 - Dashboard -->
         <li class="nav-item">
-          <a href="admin-dashboard.html" class="nav-link active"
-            ><i class="bi bi-house fa-fw me-2"></i>داشبورد</a
-          >
+          <a href="{% url 'products:admin_product_list' %}" class="nav-link active">
+            <i class="bi bi-house fa-fw me-2"></i>داشبورد
+          </a>
         </li>
 
         <!-- Title -->
-        <li class="nav-item ms-2 my-2">صفحات</li>
+        <li class="nav-item ms-2 my-2">مدیریت</li>
 
-        <!-- menu item 2 -->
+        <!-- Menu item 2 - Products -->
         <li class="nav-item">
           <a
             class="nav-link"
             data-bs-toggle="collapse"
-            href="#collapsepage"
+            href="#collapseproducts"
             role="button"
             aria-expanded="false"
-            aria-controls="collapsepage"
+            aria-controls="collapseproducts"
           >
-            <i class="bi bi-basket fa-fw me-2"></i>دوره ها
+            <i class="fas fa-pills fa-fw me-2"></i>محصولات
           </a>
           <!-- Submenu -->
           <ul
             class="nav collapse flex-column"
-            id="collapsepage"
+            id="collapseproducts"
             data-bs-parent="#navbar-sidebar"
           >
             <li class="nav-item">
-              <a class="nav-link" href="admin-course-list.html">لیست</a>
+              <a class="nav-link" href="{% url 'products:admin_product_list' %}">لیست محصولات</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="admin-course-category.html"
-                >دسته بندی</a
-              >
+              <a class="nav-link" href="{% url 'products:admin_product_create' %}">افزودن محصول</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="admin-course-detail.html">جزئیات</a>
+              <a class="nav-link" href="">دسته‌بندی‌ها</a>
             </li>
           </ul>
         </li>
 
-        <!-- Menu item 3 -->
-        <li class="nav-item">
-          <a class="nav-link" href="admin-student-list.html"
-            ><i class="fas fa-user-graduate fa-fw me-2"></i>هنرجویان</a
-          >
-        </li>
-
-        <!-- Menu item 4 -->
+        <!-- Menu item 3 - Orders -->
         <li class="nav-item">
           <a
             class="nav-link"
             data-bs-toggle="collapse"
-            href="#collapseinstructors"
+            href="#collapseorders"
             role="button"
             aria-expanded="false"
-            aria-controls="collapseinstructors"
+            aria-controls="collapseorders"
           >
-            <i class="fas fa-user-tie fa-fw me-2"></i>مدرس
+            <i class="fas fa-shopping-cart fa-fw me-2"></i>سفارشات
           </a>
           <!-- Submenu -->
           <ul
             class="nav collapse flex-column"
-            id="collapseinstructors"
+            id="collapseorders"
             data-bs-parent="#navbar-sidebar"
           >
             <li class="nav-item">
-              <a class="nav-link" href="admin-instructor-list.html">لیست</a>
+              <a class="nav-link" href="{% url 'orders:admin_order_list' %}">لیست سفارشات</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="admin-instructor-detail.html">جزئیات</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="admin-instructor-request.html"
-                >درخواست ها
-                <span class="badge text-bg-success rounded-circle ms-2">2</span>
+              <a class="nav-link" href="{% url 'orders:admin_pending_orders' %}">
+                سفارشات در انتظار
+                <span class="badge text-bg-warning rounded-circle ms-2">3</span>
               </a>
             </li>
           </ul>
         </li>
 
-        <!-- Menu item 5 -->
+        <!-- Menu item 4 - Users -->
         <li class="nav-item">
-          <a class="nav-link" href="admin-review.html"
-            ><i class="far fa-comment-dots fa-fw me-2"></i>دیدگاه ها</a
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#collapseusers"
+            role="button"
+            aria-expanded="false"
+            aria-controls="collapseusers"
           >
+            <i class="fas fa-users fa-fw me-2"></i>کاربران
+          </a>
+          <!-- Submenu -->
+          <ul
+            class="nav collapse flex-column"
+            id="collapseusers"
+            data-bs-parent="#navbar-sidebar"
+          >
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:admin_user_list' %}">لیست کاربران</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'users:admin_user_create' %}">افزودن کاربر</a>
+            </li>
+          </ul>
         </li>
 
-        <!-- Menu item 6 -->
+        <!-- Menu item 5 - Inventory -->
         <li class="nav-item">
-          <a class="nav-link" href="admin-earning.html"
-            ><i class="far fa-chart-bar fa-fw me-2"></i>درآمدها</a
-          >
+          <a class="nav-link" href="{% url 'products:admin_inventory' %}">
+            <i class="fas fa-warehouse fa-fw me-2"></i>موجودی انبار
+          </a>
         </li>
 
-        <!-- Menu item 7 -->
+        <!-- Menu item 6 - Reports -->
         <li class="nav-item">
-          <a class="nav-link" href="admin-setting.html"
-            ><i class="fas fa-user-cog fa-fw me-2"></i>تنظیمات</a
+          <a
+            class="nav-link"
+            data-bs-toggle="collapse"
+            href="#collapsereports"
+            role="button"
+            aria-expanded="false"
+            aria-controls="collapsereports"
           >
+            <i class="far fa-chart-bar fa-fw me-2"></i>گزارش‌ها
+          </a>
+          <!-- Submenu -->
+          <ul
+            class="nav collapse flex-column"
+            id="collapsereports"
+            data-bs-parent="#navbar-sidebar"
+          >
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'orders:admin_sales_report' %}">گزارش فروش</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="{% url 'products:admin_low_stock_report' %}">کالاهای کم موجود</a>
+            </li>
+          </ul>
         </li>
 
-        <!-- Menu item 8 -->
+        <!-- Menu item 7 - Settings -->
+        <li class="nav-item">
+          <a class="nav-link" href="{% url 'admin:index' %}">
+            <i class="fas fa-cog fa-fw me-2"></i>تنظیمات سایت
+          </a>
+        </li>
+
+        <!-- Title -->
+        <li class="nav-item ms-2 my-2">سیستم</li>
+
+        <!-- Menu item 8 - Authentication -->
         <li class="nav-item">
           <a
             class="nav-link"
@@ -144,27 +182,19 @@
             data-bs-parent="#navbar-sidebar"
           >
             <li class="nav-item">
-              <a class="nav-link" href="sign-up.html">ثبت نام</a>
+              <a class="nav-link" href="{% url 'users:admin_otp_settings' %}">تنظیمات OTP</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="sign-in.html">ورود</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="forgot-password.html"
-                >فراموشی رمز عبور</a
-              >
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="admin-error-404.html">صفحه 404</a>
+              <a class="nav-link" href="{% url 'users:admin_user_permissions' %}">مجوزهای کاربران</a>
             </li>
           </ul>
         </li>
 
-        <!-- Menu item 9 -->
+        <!-- Menu item 9 - Backup & Maintenance -->
         <li class="nav-item">
-          <a class="nav-link" href="docs/index.html"
-            ><i class="far fa-clipboard fa-fw me-2"></i>کدهای کاربردی</a
-          >
+          <a class="nav-link" href="{% url 'admin:admin_maintenance' %}">
+            <i class="fas fa-tools fa-fw me-2"></i>نگهداری سیستم
+          </a>
         </li>
       </ul>
       <!-- Sidebar menu end -->
@@ -176,16 +206,16 @@
         >
           <a
             class="h5 mb-0 text-body"
-            href="admin-setting.html"
+            href="{% url 'admin:index' %}"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
-            title="تنظیمات"
+            title="پنل Django Admin"
           >
             <i class="bi bi-gear-fill"></i>
           </a>
           <a
             class="h5 mb-0 text-body"
-            href="index.html"
+            href="{% url 'products:home' %}"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
             title="صفحه اصلی"
@@ -194,7 +224,7 @@
           </a>
           <a
             class="h5 mb-0 text-body"
-            href="sign-in.html"
+            href="{% url 'users:logout' %}"
             data-bs-toggle="tooltip"
             data-bs-placement="top"
             title="خروج"

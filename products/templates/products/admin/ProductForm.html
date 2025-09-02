@@ -1,0 +1,466 @@
+{% extends "admin-base.html" %}
+{% load static %}
+
+{% block title %}{% if object %}ویرایش محصول{% else %}افزودن محصول{% endif %} - پنل مدیریت{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-4">
+  <!-- Page header START -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-sm-flex justify-content-between align-items-center">
+        <div>
+          <h1 class="h3 mb-2 mb-sm-0">
+            {% if object %}
+              <i class="fas fa-edit text-primary me-2"></i>ویرایش محصول
+            {% else %}
+              <i class="fas fa-plus-circle text-success me-2"></i>افزودن محصول جدید
+            {% endif %}
+          </h1>
+          <p class="mb-0 text-muted">
+            {% if object %}
+              ویرایش اطلاعات محصول {{ object.name }}
+            {% else %}
+              محصول جدید را با تکمیل فرم زیر اضافه کنید
+            {% endif %}
+          </p>
+        </div>
+        <a href="{% url 'products:admin_product_list' %}" class="btn btn-light mb-0">
+          <i class="fas fa-arrow-right me-2"></i>بازگشت به لیست
+        </a>
+      </div>
+    </div>
+  </div>
+  <!-- Page header END -->
+
+  <!-- Main content START -->
+  <div class="row">
+    <div class="col-12">
+      <!-- Form card START -->
+      <div class="card bg-transparent border rounded-3">
+        <div class="card-header bg-light border-bottom">
+          <h4 class="card-header-title">
+            <i class="fas fa-info-circle text-primary me-2"></i>اطلاعات محصول
+          </h4>
+        </div>
+        
+        <div class="card-body">
+          <form method="post" enctype="multipart/form-data" class="row g-4">
+            {% csrf_token %}
+            
+            <!-- نام محصول -->
+            <div class="col-md-6">
+              <label for="{{ form.name.id_for_label }}" class="form-label fw-bold">
+                نام محصول <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control{% if form.name.errors %} is-invalid{% endif %}" 
+                id="{{ form.name.id_for_label }}"
+                name="{{ form.name.name }}"
+                value="{{ form.name.value|default:'' }}"
+                placeholder="نام محصول را وارد کنید"
+                dir="rtl"
+                required
+              >
+              {% if form.name.errors %}
+                <div class="invalid-feedback">
+                  {{ form.name.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- نام مستعار (اسلاگ) -->
+            <div class="col-md-6">
+              <label for="{{ form.slug.id_for_label }}" class="form-label fw-bold">
+                نام مستعار (URL) <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control{% if form.slug.errors %} is-invalid{% endif %}" 
+                id="{{ form.slug.id_for_label }}"
+                name="{{ form.slug.name }}"
+                value="{{ form.slug.value|default:'' }}"
+                placeholder="product-name"
+                dir="ltr"
+                required
+              >
+              {% if form.slug.errors %}
+                <div class="invalid-feedback">
+                  {{ form.slug.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>
+                فقط از حروف انگلیسی، اعداد و خط تیره استفاده کنید
+              </div>
+            </div>
+
+            <!-- دسته‌بندی -->
+            <div class="col-md-6">
+                <label for="{{ form.category.id_for_label }}" class="form-label fw-bold">
+                    دسته‌بندی
+                </label>
+                <select 
+                    class="form-select{% if form.category.errors %} is-invalid{% endif %}"
+                    id="{{ form.category.id_for_label }}"
+                    name="{{ form.category.name }}"
+                    style="direction: rtl; unicode-bidi: embed;"
+                    >
+                    <option value="" disabled selected hidden>انتخاب دسته‌بندی</option>
+                    {% for choice in form.category.field.queryset %}
+                        <option value="{{ choice.pk }}" 
+                        style="direction: rtl; unicode-bidi: embed;"
+                        {% if form.category.value == choice.pk %}selected{% endif %}>
+                        {{ choice.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+                {% if form.category.errors %}
+                    <div class="invalid-feedback">
+                    {{ form.category.errors.0 }}
+                    </div>
+                {% endif %}
+            </div>
+
+
+            <!-- کد محصول (SKU) -->
+            <div class="col-md-6">
+              <label for="{{ form.sku.id_for_label }}" class="form-label fw-bold">
+                کد محصول (SKU) <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="text" 
+                class="form-control{% if form.sku.errors %} is-invalid{% endif %}" 
+                id="{{ form.sku.id_for_label }}"
+                name="{{ form.sku.name }}"
+                value="{{ form.sku.value|default:'' }}"
+                placeholder="مثال: PRD001"
+                dir="ltr"
+                required
+              >
+              {% if form.sku.errors %}
+                <div class="invalid-feedback">
+                  {{ form.sku.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- قیمت واحد -->
+            <div class="col-md-6">
+              <label for="{{ form.unit_price.id_for_label }}" class="form-label fw-bold">
+                قیمت واحد (ریال) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control{% if form.unit_price.errors %} is-invalid{% endif %}" 
+                  id="{{ form.unit_price.id_for_label }}"
+                  name="{{ form.unit_price.name }}"
+                  value="{{ form.unit_price.value|default:'' }}"
+                  placeholder="0"
+                  min="0"
+                  required
+                >
+                <span class="input-group-text">ریال</span>
+                {% if form.unit_price.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.unit_price.errors.0 }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- قیمت تمام شده -->
+            <div class="col-md-6">
+              <label for="{{ form.cost_price.id_for_label }}" class="form-label fw-bold">
+                قیمت تمام شده (ریال)
+              </label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control{% if form.cost_price.errors %} is-invalid{% endif %}" 
+                  id="{{ form.cost_price.id_for_label }}"
+                  name="{{ form.cost_price.name }}"
+                  value="{{ form.cost_price.value|default:'' }}"
+                  placeholder="0"
+                  min="0"
+                >
+                <span class="input-group-text">ریال</span>
+                {% if form.cost_price.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.cost_price.errors.0 }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- موجودی -->
+            <div class="col-md-6">
+              <label for="{{ form.quantity.id_for_label }}" class="form-label fw-bold">
+                موجودی <span class="text-danger">*</span>
+              </label>
+              <input 
+                type="number" 
+                class="form-control{% if form.quantity.errors %} is-invalid{% endif %}" 
+                id="{{ form.quantity.id_for_label }}"
+                name="{{ form.quantity.name }}"
+                value="{{ form.quantity.value|default:'0' }}"
+                placeholder="0"
+                min="0"
+                required
+              >
+              {% if form.quantity.errors %}
+                <div class="invalid-feedback">
+                  {{ form.quantity.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- حد هشدار موجودی -->
+            <div class="col-md-6">
+              <label for="{{ form.reorder_level.id_for_label }}" class="form-label fw-bold">
+                حد هشدار موجودی
+              </label>
+              <input 
+                type="number" 
+                class="form-control{% if form.reorder_level.errors %} is-invalid{% endif %}" 
+                id="{{ form.reorder_level.id_for_label }}"
+                name="{{ form.reorder_level.name }}"
+                value="{{ form.reorder_level.value|default:'5' }}"
+                placeholder="5"
+                min="0"
+              >
+              {% if form.reorder_level.errors %}
+                <div class="invalid-feedback">
+                  {{ form.reorder_level.errors.0 }}
+                </div>
+              {% endif %}
+              <div class="form-text">
+                <i class="fas fa-info-circle me-1"></i>
+                هنگامی که موجودی به این مقدار برسد، هشدار نمایش داده می‌شود
+              </div>
+            </div>
+
+            <!-- درصد تخفیف -->
+            <div class="col-md-6">
+              <label for="{{ form.discount_percent.id_for_label }}" class="form-label fw-bold">
+                درصد تخفیف
+              </label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control{% if form.discount_percent.errors %} is-invalid{% endif %}" 
+                  id="{{ form.discount_percent.id_for_label }}"
+                  name="{{ form.discount_percent.name }}"
+                  value="{{ form.discount_percent.value|default:'0' }}"
+                  placeholder="0"
+                  min="0"
+                  max="100"
+                >
+                <span class="input-group-text">%</span>
+                {% if form.discount_percent.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.discount_percent.errors.0 }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- تخفیف ثابت -->
+            <div class="col-md-6">
+              <label for="{{ form.discount_per_unit.id_for_label }}" class="form-label fw-bold">
+                تخفیف ثابت (ریال)
+              </label>
+              <div class="input-group">
+                <input 
+                  type="number" 
+                  class="form-control{% if form.discount_per_unit.errors %} is-invalid{% endif %}" 
+                  id="{{ form.discount_per_unit.id_for_label }}"
+                  name="{{ form.discount_per_unit.name }}"
+                  value="{{ form.discount_per_unit.value|default:'0' }}"
+                  placeholder="0"
+                  min="0"
+                >
+                <span class="input-group-text">ریال</span>
+                {% if form.discount_per_unit.errors %}
+                  <div class="invalid-feedback">
+                    {{ form.discount_per_unit.errors.0 }}
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <!-- بارکد -->
+            <div class="col-md-12">
+              <label for="{{ form.barcode.id_for_label }}" class="form-label fw-bold">
+                بارکد
+              </label>
+              <input 
+                type="text" 
+                class="form-control{% if form.barcode.errors %} is-invalid{% endif %}" 
+                id="{{ form.barcode.id_for_label }}"
+                name="{{ form.barcode.name }}"
+                value="{{ form.barcode.value|default:'' }}"
+                placeholder="بارکد محصول"
+                dir="ltr"
+              >
+              {% if form.barcode.errors %}
+                <div class="invalid-feedback">
+                  {{ form.barcode.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- توضیحات -->
+            <div class="col-12">
+              <label for="{{ form.description.id_for_label }}" class="form-label fw-bold">
+                توضیحات
+              </label>
+              <textarea 
+                class="form-control{% if form.description.errors %} is-invalid{% endif %}" 
+                id="{{ form.description.id_for_label }}"
+                name="{{ form.description.name }}"
+                rows="4"
+                placeholder="توضیحات تکمیلی در مورد محصول"
+                dir="rtl"
+              >{{ form.description.value|default:'' }}</textarea>
+              {% if form.description.errors %}
+                <div class="invalid-feedback">
+                  {{ form.description.errors.0 }}
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- تصویر محصول -->
+            <div class="col-md-6">
+              <label for="{{ form.image.id_for_label }}" class="form-label fw-bold">
+                تصویر محصول
+              </label>
+              <input 
+                type="file" 
+                class="form-control{% if form.image.errors %} is-invalid{% endif %}" 
+                id="{{ form.image.id_for_label }}"
+                name="{{ form.image.name }}"
+                accept="image/*"
+              >
+              {% if form.image.errors %}
+                <div class="invalid-feedback">
+                  {{ form.image.errors.0 }}
+                </div>
+              {% endif %}
+              {% if object and object.image %}
+                <div class="mt-2">
+                  <img src="{{ object.image.url }}" alt="{{ object.name }}" class="img-thumbnail" style="max-width: 150px;">
+                </div>
+              {% endif %}
+            </div>
+
+            <!-- تنظیمات -->
+            <div class="col-md-6">
+              <label class="form-label fw-bold">تنظیمات</label>
+              <div class="form-check">
+                <input 
+                  type="checkbox" 
+                  class="form-check-input" 
+                  id="{{ form.is_active.id_for_label }}"
+                  name="{{ form.is_active.name }}"
+                  {% if form.is_active.value %}checked{% endif %}
+                >
+                <label class="form-check-label" for="{{ form.is_active.id_for_label }}">
+                  محصول فعال است
+                </label>
+              </div>
+              <div class="form-check">
+                <input 
+                  type="checkbox" 
+                  class="form-check-input" 
+                  id="{{ form.recommended.id_for_label }}"
+                  name="{{ form.recommended.name }}"
+                  {% if form.recommended.value %}checked{% endif %}
+                >
+                <label class="form-check-label" for="{{ form.recommended.id_for_label }}">
+                  محصول پیشنهادی
+                </label>
+              </div>
+            </div>
+
+            <!-- دکمه‌های عملیات -->
+            <div class="col-12">
+              <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success px-4">
+                  <i class="fas fa-save me-2"></i>
+                  {% if object %}ذخیره تغییرات{% else %}افزودن محصول{% endif %}
+                </button>
+                <button type="button" class="btn btn-secondary px-4" onclick="history.back()">
+                  <i class="fas fa-times me-2"></i>انصراف
+                </button>
+                {% if object %}
+                  <a href="{% url 'products:admin_product_delete' object.id %}" class="btn btn-danger px-4" onclick="return confirm('آیا مطمئن هستید؟')">
+                    <i class="fas fa-trash me-2"></i>حذف محصول
+                  </a>
+                {% endif %}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+      <!-- Form card END -->
+    </div>
+  </div>
+  <!-- Main content END -->
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+  .form-label {
+    color: #495057;
+  }
+  .text-danger {
+    color: #dc3545 !important;
+  }
+  .card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  }
+  .form-control:focus {
+    border-color: #80bdff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // تبدیل خودکار نام محصول به اسلاگ
+  document.getElementById('{{ form.name.id_for_label }}').addEventListener('input', function() {
+    const name = this.value;
+    const slug = name
+      .toLowerCase()
+      .replace(/[\u0600-\u06FF\s]/g, '') // حذف حروف فارسی و فاصله
+      .replace(/[^\w\s-]/g, '') // حذف کاراکترهای خاص
+      .replace(/\s+/g, '-') // تبدیل فاصله به خط تیره
+      .trim();
+    document.getElementById('{{ form.slug.id_for_label }}').value = slug;
+  });
+
+  // محاسبه قیمت نهایی با تخفیف
+  function calculateFinalPrice() {
+    const unitPrice = parseFloat(document.getElementById('{{ form.unit_price.id_for_label }}').value) || 0;
+    const discountPercent = parseFloat(document.getElementById('{{ form.discount_percent.id_for_label }}').value) || 0;
+    const discountAmount = parseFloat(document.getElementById('{{ form.discount_per_unit.id_for_label }}').value) || 0;
+    
+    const priceAfterPercent = unitPrice * (100 - discountPercent) / 100;
+    const finalPrice = Math.max(0, priceAfterPercent - discountAmount);
+    
+    // نمایش قیمت نهایی (اختیاری)
+    console.log('قیمت نهایی:', finalPrice);
+  }
+
+  // اضافه کردن event listener برای محاسبه قیمت
+  ['{{ form.unit_price.id_for_label }}', '{{ form.discount_percent.id_for_label }}', '{{ form.discount_per_unit.id_for_label }}'].forEach(id => {
+    document.getElementById(id).addEventListener('input', calculateFinalPrice);
+  });
+</script>
+{% endblock %}
