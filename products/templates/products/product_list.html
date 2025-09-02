@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- =======================
+Page content START -->
+<section class="pt-4">
+  <div class="container">
+    <form method="get" class="bg-light border p-4 rounded-3 my-4 d-flex align-items-center flex-wrap gap-3">
+        <!-- Search input, takes fixed width -->
+        <div style="flex: 0 0 25%;">
+            <input type="search" name="search" value="{{ search }}" class="form-control" placeholder="جستجو براساس کلمه کلیدی" />
+        </div>
+
+        <!-- Filters container, occupies remaining space -->
+        <div style="flex: 1 1 auto;" class="d-flex gap-3">
+            <!-- Category filter -->
+            <select name="category" class="form-select form-select-sm rtl-select" aria-label="دسته بندی" style="min-width: 150px;">
+            <option value="" disabled selected hidden>انتخاب دسته‌بندی</option>
+            {% for choice in form.category.field.queryset %}
+            <option value="{{ choice.name }}" {% if category == choice.name %}selected{% endif %} dir="rtl" style="unicode-bidi: embed;">
+                {{ choice.name }}
+            </option>
+            {% endfor %}
+            </select>
+
+            <!-- Price filter -->
+            <select name="price" class="form-select form-select-sm rtl-select" aria-label="قیمت" style="min-width: 150px;">
+            <option value="" disabled selected hidden>انتخاب قیمت</option>
+            <option value="همه" {% if price == 'همه' %}selected{% endif %} dir="rtl" style="unicode-bidi: embed;">همه</option>
+            <option value="رایگان" {% if price == 'رایگان' %}selected{% endif %} dir="rtl" style="unicode-bidi: embed;">رایگان</option>
+            <option value="خریدنی" {% if price == 'خریدنی' %}selected{% endif %} dir="rtl" style="unicode-bidi: embed;">خریدنی</option>
+            <option value="تخفیف_دار" {% if price == 'تخفیف_دار' %}selected{% endif %} dir="rtl" style="unicode-bidi: embed;">دارای تخفیف</option>
+            </select>
+        </div>
+
+        <!-- Search button -->
+        <div style="flex: 0 0 auto;">
+            <button type="submit" class="btn btn-primary d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+            <i class="fas fa-search"></i>
+            </button>
+        </div>
+    </form>
+
+
+    <div class="row mt-3">
+      <div class="col-12">
+        <div class="row g-4">
+          {% for product in products %}
+          <div class="col-sm-6 col-lg-4 col-xl-3">
+            <div class="card shadow h-100">
+              <img src="{% if product.image %}{{ product.image.url }}{% else %}{% static 'assets/images/default-product.jpg' %}{% endif %}" class="card-img-top" alt="{{ product.name }}">
+              <div class="card-body pb-0">
+                <div class="d-flex justify-content-between mb-2">
+                  <a href="#" class="badge bg-purple bg-opacity-10 text-purple">
+                    {{ product.skill_level|default:"همه سطح" }}
+                  </a>
+                  <a href="#" class="h6"><i class="far fa-heart"></i></a>
+                </div>
+                <h5 class="card-title fw-normal">
+                  <a href="{% url 'products:product_detail' product.slug %}">{{ product.name }}</a>
+                </h5>
+                <ul class="list-inline mb-0">
+                  {% for i in "12345" %}
+                    {% if forloop.counter <= product.rating|default:0 %}
+                      <li class="list-inline-item small"><i class="fas fa-star text-warning"></i></li>
+                    {% else %}
+                      <li class="list-inline-item small"><i class="far fa-star text-warning"></i></li>
+                    {% endif %}
+                  {% endfor %}
+                  <li class="list-inline-item ms-2 h6">{{ product.rating|default:"0.0" }}/5.0</li>
+                </ul>
+              </div>
+              <div class="card-footer pt-0 pb-3">
+                <hr>
+                <div class="d-flex justify-content-between">
+                  <span><i class="far fa-clock text-danger"></i> {{ product.duration|default:"N/A" }}</span>
+                  <span><i class="fas fa-table text-orange"></i> {{ product.video_count|default:"0" }} ویدیو</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <p class="text-center py-5 fw-semibold">هیچ محصولی یافت نشد.</p>
+          {% endfor %}
+        </div>
+
+        {% if is_paginated %}
+        <nav aria-label="Page navigation" class="mt-4">
+          <ul class="pagination pagination-primary justify-content-center">
+            {% if page_obj.has_previous %}
+              <li class="page-item"><a class="page-link" href="?page=1">ابتدا</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">قبلی</a></li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">ابتدا</span></li>
+              <li class="page-item disabled"><span class="page-link">قبلی</span></li>
+            {% endif %}
+            {% for num in page_obj.paginator.page_range %}
+              {% if num == page_obj.number %}
+                <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+              {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+                <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+              {% endif %}
+            {% endfor %}
+            {% if page_obj.has_next %}
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">بعدی</a></li>
+              <li class="page-item"><a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">انتها</a></li>
+            {% else %}
+              <li class="page-item disabled"><span class="page-link">بعدی</span></li>
+              <li class="page-item disabled"><span class="page-link">انتها</span></li>
+            {% endif %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</section>
+<!-- =======================
+Page content END -->
+{% endblock %}
