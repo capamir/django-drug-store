@@ -1,0 +1,266 @@
+{% extends "admin-base.html" %}
+{% load static %}
+
+{% block content %}
+<!-- Title -->
+<div class="row mb-3">
+    <div class="col-12 d-sm-flex justify-content-between align-items-center">
+        <h1 class="h3 mb-2 mb-sm-0 fs-5">
+            دسته‌بندی‌ها 
+            <span class="badge bg-primary bg-opacity-10 text-primary">{{ total_categories }}</span>
+        </h1>
+        <a href="{% url 'products:admin_category_create' %}" class="btn btn-sm btn-primary mb-0">
+            <i class="fas fa-plus me-1"></i>افزودن دسته‌بندی
+        </a>
+    </div>
+</div>
+
+<!-- Statistics START -->
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="text-center p-4 bg-primary bg-opacity-10 border border-primary rounded-3">
+            <h6>کل دسته‌بندی‌ها</h6>
+            <h2 class="mb-0 fs-1 text-primary">{{ total_categories }}</h2>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="text-center p-4 bg-success bg-opacity-10 border border-success rounded-3">
+            <h6>فعال</h6>
+            <h2 class="mb-0 fs-1 text-success">{{ active_categories }}</h2>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="text-center p-4 bg-warning bg-opacity-15 border border-warning rounded-3">
+            <h6>خالی</h6>
+            <h2 class="mb-0 fs-1 text-warning">{{ empty_categories }}</h2>
+        </div>
+    </div>
+</div>
+<!-- Statistics END -->
+
+<!-- Card START -->
+<div class="card bg-transparent border">
+    <!-- Card header START -->
+    <div class="card-header bg-light border-bottom">
+        <!-- Search and Bulk Actions START -->
+        <div class="row g-3 align-items-center justify-content-between">
+            <!-- Search bar -->
+            <div class="col-md-6">
+                <form method="get" class="rounded position-relative">
+                    <input class="form-control bg-body" type="search" name="search" 
+                           value="{{ current_search }}" placeholder="جستجوی دسته‌بندی" aria-label="Search">
+                    <button class="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0" type="submit">
+                        <i class="fas fa-search fs-6"></i>
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Filter & Bulk Actions -->
+            <div class="col-md-6">
+                <div class="d-flex gap-2">
+                    <!-- Status Filter -->
+                    <select class="form-select" name="status" onchange="this.form.submit()">
+                        <option value="">همه وضعیت‌ها</option>
+                        <option value="active" {% if current_status == 'active' %}selected{% endif %}>فعال</option>
+                        <option value="inactive" {% if current_status == 'inactive' %}selected{% endif %}>غیرفعال</option>
+                    </select>
+                    
+                    <!-- Bulk Actions -->
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            عملیات گروهی
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="bulkAction('activate')">فعال کردن</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="bulkAction('deactivate')">غیرفعال کردن</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="#" onclick="bulkAction('delete')">حذف</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Search and Bulk Actions END -->
+    </div>
+    <!-- Card header END -->
+
+    <!-- Card body START -->
+    <div class="card-body">
+        <div class="table-responsive border-0 rounded-3">
+            <table class="table table-dark-gray align-middle p-4 mb-0 table-hover">
+                <thead>
+                    <tr>
+                        <th scope="col" class="border-0">
+                            <input type="checkbox" id="selectAll" class="form-check-input">
+                        </th>
+                        <th scope="col" class="border-0">دسته‌بندی</th>
+                        <th scope="col" class="border-0">تعداد محصولات</th>
+                        <th scope="col" class="border-0">محصولات فعال</th>
+                        <th scope="col" class="border-0">وضعیت</th>
+                        <th scope="col" class="border-0 rounded-end">عملیات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for category in categories %}
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input category-checkbox" value="{{ category.id }}">
+                        </td>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="w-60px me-3">
+                                    {% if category.image %}
+                                        <img src="{{ category.image.url }}" class="rounded" alt="{{ category.name }}">
+                                    {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 60px; height: 40px;">
+                                            <i class="fas fa-folder text-muted"></i>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">
+                                        <a href="{% url 'products:admin_category_detail' category.id %}">{{ category.name }}</a>
+                                    </h6>
+                                    <p class="mb-0 small text-muted">{{ category.description|truncatewords:10 }}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge bg-info bg-opacity-10 text-info">
+                                {{ category.total_products }} محصول
+                            </span>
+                        </td>
+                        <td>{{ category.active_products }}</td>
+                        <td>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" 
+                                       {% if category.is_active %}checked{% endif %}
+                                       onchange="toggleStatus({{ category.id }})">
+                                <label class="form-check-label">
+                                    {% if category.is_active %}فعال{% else %}غیرفعال{% endif %}
+                                </label>
+                            </div>
+                        </td>
+                        <td>
+                            <a href="{% url 'products:admin_category_edit' category.id %}" class="btn btn-sm btn-primary me-1">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <button class="btn btn-sm btn-danger" onclick="deleteCategory({{ category.id }})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            دسته‌بندی یافت نشد
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <!-- Card body END -->
+
+    <!-- Pagination START -->
+    {% if is_paginated %}
+    <div class="card-footer bg-transparent pt-0">
+        <div class="d-sm-flex justify-content-sm-between align-items-sm-center">
+            <p class="mb-0 text-center text-sm-start">
+                نمایش {{ page_obj.start_index }} تا {{ page_obj.end_index }} از {{ page_obj.paginator.count }}
+            </p>
+            <nav class="d-flex justify-content-center mb-0">
+                <ul class="pagination pagination-sm pagination-primary-soft d-inline-block d-md-flex rounded mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item mb-0">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                            <i class="fas fa-angle-right"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in page_obj.paginator.page_range %}
+                    <li class="page-item mb-0 {% if page_obj.number == num %}active{% endif %}">
+                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                    </li>
+                    {% endfor %}
+                    
+                    {% if page_obj.has_next %}
+                    <li class="page-item mb-0">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                            <i class="fas fa-angle-left"></i>
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+    </div>
+    {% endif %}
+    <!-- Pagination END -->
+</div>
+<!-- Card END -->
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// CSRF Token
+const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+// Toggle individual category status
+function toggleStatus(categoryId) {
+    fetch(`{% url 'products:admin_category_toggle' 0 %}`.replace('0', categoryId), {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload(); // or update UI dynamically
+        }
+    });
+}
+
+// Bulk actions
+function bulkAction(action) {
+    const selected = Array.from(document.querySelectorAll('.category-checkbox:checked')).map(cb => cb.value);
+    
+    if (selected.length === 0) {
+        alert('لطفاً حداقل یک دسته‌بندی انتخاب کنید');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('action', action);
+    selected.forEach(id => formData.append('category_ids', id));
+    
+    fetch(window.location.href, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': csrftoken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    });
+}
+
+// Select all functionality
+document.getElementById('selectAll').addEventListener('change', function() {
+    document.querySelectorAll('.category-checkbox').forEach(cb => {
+        cb.checked = this.checked;
+    });
+});
+</script>
+{% endblock %}
