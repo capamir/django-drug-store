@@ -3,11 +3,11 @@ from django.db import models
 from django.utils import timezone
 import random
 import string
-from .managers import UserManager
-
+from .managers import UserManager, AddressManager
+from .validators import IranianPostalCodeValidator, IranianPhoneValidator, IranianNationalIdValidator
 
 class User(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(max_length=11, unique=True)
+    phone_number = models.CharField(max_length=11, unique=True, validators=[IranianPhoneValidator()])
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True, null=True)
@@ -19,6 +19,35 @@ class User(AbstractBaseUser, PermissionsMixin):
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(blank=True, null=True)
     
+    national_id = models.CharField(
+        max_length=10, 
+        blank=True, 
+        help_text='کد ملی',
+        validators=[IranianNationalIdValidator()]
+
+    )
+    birth_date = models.DateField(blank=True, null=True)
+    gender = models.CharField(
+        max_length=1,
+        choices=[('M', 'مرد'), ('F', 'زن')],
+        blank=True
+    )
+    
+    # Marketing preferences
+    sms_notifications = models.BooleanField(
+        default=True,
+        help_text='دریافت اطلاعیه‌ها از طریق پیامک'
+    )
+    
+    # Customer status
+    is_vip = models.BooleanField(default=False)
+    total_orders = models.PositiveIntegerField(default=0)
+    total_spent = models.DecimalField(
+        max_digits=12, 
+        decimal_places=0, 
+        default=0
+    )
+
     objects = UserManager()
     
     USERNAME_FIELD = 'phone_number'
@@ -37,6 +66,45 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def get_short_name(self):
         return self.first_name or self.phone_number
+    
+    def get_default_address(self):
+        """Get user's default address"""
+        return self.addresses.filter(is_default=True, is_active=True).first()
+    
+    def get_active_addresses(self):
+        """Get all active addresses for user"""
+        return self.addresses.filter(is_active=True)
+    
+    def set_password(self, raw_password):
+        """Allow passwords only for staff users"""
+        if self.is_staff or self.is_superuser:
+            super().set_password(raw_password)
+        else:
+            # Regular users don't use passwords
+            pass
+    
+    def check_password(self, raw_password):
+        """Check password only for staff users"""
+        if self.is_staff or self.is_superuser:
+            return super().check_password(raw_password)
+        else:
+            # Regular users authenticate via OTP only
+            return False
+    
+    def has_usable_password(self):
+        """Only staff users have usable passwords"""
+        return self.is_staff or self.is_superuser
+
+    @property
+    def has_complete_profile(self):
+        """Check if user has completed their profile"""
+        return all([
+            self.first_name,
+            self.last_name,
+            self.email,
+            self.is_phone_verified,
+            self.get_default_address()
+        ])
 
 class OTPVerification(models.Model):
     phone_number = models.CharField(max_length=11)
@@ -105,3 +173,106 @@ class OTPVerification(models.Model):
             return True, "OTP verified successfully"
         
         return False, f"Invalid OTP. {max_attempts - self.attempts} attempts remaining"
+
+# users/models.py
+class Address(models.Model):
+    ADDRESS_TYPES = [
+        ('home', 'خانه'),
+        ('work', 'محل کار'),
+        ('other', 'سایر'),
+    ]
+    
+    user = models.ForeignKey(
+        User, 
+        on_delete=models.CASCADE, 
+        related_name='addresses'
+    )
+    title = models.CharField(
+        max_length=50, 
+        help_text='نام آدرس (مثل: خانه، محل کار)'
+    )
+    address_type = models.CharField(
+        max_length=10, 
+        choices=ADDRESS_TYPES, 
+        default='home'
+    )
+    
+    # Geographic Information
+    province = models.CharField(max_length=50, help_text='استان')
+    city = models.CharField(max_length=50, help_text='شهر') 
+    district = models.CharField(max_length=50, blank=True, help_text='منطقه/محله')
+    street = models.CharField(max_length=200, help_text='خیابان و کوچه')
+    alley = models.CharField(max_length=100, blank=True, help_text='کوچه/پلاک')
+    building_number = models.CharField(max_length=20, blank=True, help_text='شماره ساختمان')
+    unit = models.CharField(max_length=10, blank=True, help_text='واحد')
+    postal_code = models.CharField(max_length=10, help_text='کد پستی', validators=[IranianPostalCodeValidator()])
+    
+    # Contact Information
+    recipient_name = models.CharField(
+        max_length=100, 
+        help_text='نام گیرنده'
+    )
+    recipient_phone = models.CharField(
+        max_length=11, 
+        help_text='شماره تماس گیرنده',
+        validators=[IranianPhoneValidator()]
+    )
+    
+    # Additional Information
+    description = models.TextField(
+        blank=True, 
+        help_text='توضیحات تکمیلی (نشانی دقیق)'
+    )
+    
+    # # Geographic Coordinates (for delivery optimization)
+    # latitude = models.DecimalField(
+    #     max_digits=10, 
+    #     decimal_places=7, 
+    #     null=True, 
+    #     blank=True
+    # )
+    # longitude = models.DecimalField(
+    #     max_digits=10, 
+    #     decimal_places=7, 
+    #     null=True, 
+    #     blank=True
+    # )
+    
+    # Status and Metadata
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    objects = AddressManager()
+
+    class Meta:
+        db_table = 'user_addresses'
+        verbose_name = 'آدرس کاربر'
+        verbose_name_plural = 'آدرس‌های کاربران'
+        ordering = ['-is_default', '-created_at']
+        
+    def __str__(self):
+        return f"{self.title} - {self.user.get_full_name()}"
+    
+    def get_full_address(self):
+        """Return complete formatted address"""
+        parts = [
+            self.province,
+            self.city,
+            self.district,
+            self.street,
+            self.alley,
+            self.building_number,
+            f"واحد {self.unit}" if self.unit else None,
+        ]
+        return '، '.join(filter(None, parts))
+    
+    def save(self, *args, **kwargs):
+        # Ensure only one default address per user
+        if self.is_default:
+            Address.objects.filter(
+                user=self.user, 
+                is_default=True
+            ).update(is_default=False)
+        super().save(*args, **kwargs)
