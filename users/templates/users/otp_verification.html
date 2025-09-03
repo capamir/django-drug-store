@@ -1,0 +1,343 @@
+{% extends 'users/auth-base.html' %}
+{% load static %}
+
+{% block title %}تأیید شماره موبایل - داروخانه آنلاین{% endblock %}
+
+{% block description %}کد تأیید ارسال شده به شماره موبایل خود را وارد کنید{% endblock %}
+
+{% block content %}
+<section class="p-0 d-flex align-items-center position-relative overflow-hidden">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Side - Welcome Section -->
+            <div class="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
+                <div class="p-3 p-lg-5">
+                    <!-- Title -->
+                    <div class="text-center">
+                        <h2 class="fw-bold fs-3">تأیید شماره موبایل</h2>
+                        <p class="mb-0 h6 fw-light">یک قدم تا {{ flow_type }} باقی مانده!</p>
+                    </div>
+                    <!-- SVG Image -->
+                    <img src="{% static 'assets/images/element/02.svg' %}" class="mt-5" alt="تأیید شماره">
+                    <!-- Info -->
+                    <div class="d-sm-flex mt-5 align-items-center justify-content-center">
+                        <div class="text-center">
+                            <!-- Phone Display -->
+                            <div class="bg-white rounded-3 p-3 mb-3 shadow-sm">
+                                <i class="bi bi-phone-fill text-primary fa-2x mb-2"></i>
+                                <h5 class="mb-0">{{ masked_phone }}</h5>
+                                <small class="text-muted">کد تأیید ارسال شد</small>
+                            </div>
+                            <!-- Timer -->
+                            <div id="countdown" class="bg-success bg-opacity-10 rounded-3 p-2">
+                                <i class="fas fa-clock text-success me-1"></i>
+                                <span id="timer" class="text-success fw-bold">--:--</span>
+                                <div class="small text-muted mt-1">زمان باقی‌مانده</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Form Section -->
+            <div class="col-12 col-lg-6 m-auto">
+                <div class="row my-5">
+                    <div class="col-sm-10 col-xl-8 m-auto">
+                        <!-- Title -->
+                        <img src="{% static 'assets/images/element/03.svg' %}" class="h-40px mb-2" alt="">
+                        <h2>{{ page_title }}</h2>
+                        <p class="mb-4">{{ page_description }}</p>
+                    
+                        <!-- Form START -->
+                        <form method="post" id="otpForm">
+                            {% csrf_token %}
+                            
+                            <!-- Hidden Phone Number -->
+                            {{ form.phone_number }}
+                            
+                            <!-- OTP Code -->
+                            <div class="mb-4">
+                                <label for="{{ form.otp_code.id_for_label }}" class="form-label">
+                                    {{ form.otp_code.label }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-shield-lock-fill"></i>
+                                    </span>
+                                    <input type="text" 
+                                           name="{{ form.otp_code.name }}"
+                                           id="{{ form.otp_code.id_for_label }}"
+                                           class="form-control border-0 bg-light rounded-end ps-1 text-center fs-4 letter-spacing-1"
+                                           placeholder="۱ ۲ ۳ ۴ ۵ ۶"
+                                           maxlength="6"
+                                           autocomplete="one-time-code"
+                                           required>
+                                </div>
+                                <!-- Field Errors -->
+                                {% if form.otp_code.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.otp_code.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <!-- Help Text -->
+                                <div class="form-text small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    کد ۶ رقمی ارسال شده را وارد کنید
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="align-items-center mt-0">
+                                <div class="d-grid">
+                                    <button class="btn btn-primary btn-lg mb-0" type="submit" id="submitBtn">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        تأیید و {% if user_exists %}ورود{% else %}ادامه ثبت نام{% endif %}
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- Form END -->
+
+                        <!-- Divider -->
+                        <div class="position-relative my-4">
+                            <hr>
+                            <p class="small position-absolute top-50 start-50 translate-middle bg-body px-3">
+                                مشکل دارید؟
+                            </p>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="row g-2">
+                            <!-- Resend OTP -->
+                            <div class="col-6">
+                                <button class="btn btn-outline-success btn-sm w-100" 
+                                        id="resendBtn" 
+                                        disabled>
+                                    <i class="fas fa-redo me-2"></i>
+                                    ارسال مجدد
+                                </button>
+                            </div>
+                            <!-- Back to Phone Entry -->
+                            <div class="col-6">
+                                <a href="{% url 'users:phone_entry' %}" 
+                                   class="btn btn-outline-secondary btn-sm w-100">
+                                    <i class="fas fa-arrow-right me-2"></i>
+                                    تغییر شماره
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Security Notice -->
+                        <div class="alert alert-info mt-4" role="alert">
+                            <div class="d-flex">
+                                <i class="fas fa-shield-alt fa-2x text-info me-3 mt-1"></i>
+                                <div>
+                                    <h6 class="alert-heading">نکات امنیتی</h6>
+                                    <p class="mb-1">• کد تأیید را با کسی به اشتراک نگذارید</p>
+                                    <p class="mb-1">• این کد تنها {{ time_remaining|floatformat:0 }} ثانیه معتبر است</p>
+                                    <p class="mb-0">• در صورت دریافت نکردن، ارسال مجدد کنید</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Contact Support -->
+                        <div class="mt-4 text-center">
+                            <span class="small">
+                                <i class="fas fa-headset text-primary me-1"></i>
+                                نیاز به کمک دارید؟ 
+                                <a href="tel:02112345678" class="text-decoration-none">تماس با پشتیبانی</a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.letter-spacing-1 {
+    letter-spacing: 0.5rem;
+}
+
+#countdown {
+    transition: all 0.3s ease;
+}
+
+#countdown.expired {
+    background-color: var(--bs-danger-bg-subtle) !important;
+}
+
+#countdown.expired #timer {
+    color: var(--bs-danger) !important;
+}
+
+.otp-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    border-color: #86b7fe;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('otpForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const otpInput = document.getElementById('{{ form.otp_code.id_for_label }}');
+    const resendBtn = document.getElementById('resendBtn');
+    const timerElement = document.getElementById('timer');
+    const countdownDiv = document.getElementById('countdown');
+    
+    let timeRemaining = {{ time_remaining }};
+    let countdownInterval;
+    
+    // Initialize countdown
+    startCountdown();
+    
+    // OTP input handling
+    otpInput.addEventListener('input', function(e) {
+        // Only allow digits
+        let value = e.target.value.replace(/\D/g, '');
+        if (value.length > 6) {
+            value = value.substring(0, 6);
+        }
+        e.target.value = value;
+        
+        // Auto-submit when 6 digits entered
+        if (value.length === 6) {
+            submitBtn.disabled = false;
+            submitBtn.classList.add('btn-success');
+            submitBtn.classList.remove('btn-primary');
+            
+            // Optional: Auto-submit after short delay
+            setTimeout(() => {
+                if (otpInput.value.length === 6) {
+                    form.submit();
+                }
+            }, 500);
+        } else {
+            submitBtn.disabled = true;
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-primary');
+        }
+    });
+    
+    // Form submission
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال بررسی...';
+    });
+    
+    // Resend OTP
+    resendBtn.addEventListener('click', function() {
+        resendOTP();
+    });
+    
+    function startCountdown() {
+        if (timeRemaining <= 0) {
+            enableResendButton();
+            return;
+        }
+        
+        countdownInterval = setInterval(function() {
+            timeRemaining--;
+            updateTimerDisplay();
+            
+            if (timeRemaining <= 0) {
+                clearInterval(countdownInterval);
+                enableResendButton();
+            }
+        }, 1000);
+        
+        updateTimerDisplay();
+    }
+    
+    function updateTimerDisplay() {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+        timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining <= 30) {
+            countdownDiv.classList.add('expired');
+        }
+    }
+    
+    function enableResendButton() {
+        resendBtn.disabled = false;
+        countdownDiv.classList.add('expired');
+        timerElement.textContent = 'منقضی شده';
+    }
+    
+    function resendOTP() {
+        resendBtn.disabled = true;
+        resendBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال ارسال...';
+        
+        fetch('{% url "users:resend_otp" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reset countdown
+                timeRemaining = data.time_remaining || 300; // 5 minutes default
+                countdownDiv.classList.remove('expired');
+                clearInterval(countdownInterval);
+                startCountdown();
+                
+                // Show success message
+                showToast('success', data.message);
+                otpInput.value = '';
+                otpInput.focus();
+                
+            } else {
+                showToast('error', data.message);
+                resendBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            showToast('error', 'خطا در ارسال مجدد کد تأیید');
+            resendBtn.disabled = false;
+        })
+        .finally(() => {
+            resendBtn.innerHTML = '<i class="fas fa-redo me-2"></i>ارسال مجدد';
+        });
+    }
+    
+    function showToast(type, message) {
+        // Simple toast notification (you can enhance this)
+        const alertClass = type === 'success' ? 'alert-success' : 'alert-danger';
+        const toast = document.createElement('div');
+        toast.className = `alert ${alertClass} alert-dismissible fade show position-fixed top-0 end-0 m-3`;
+        toast.style.zIndex = '9999';
+        toast.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => {
+            if (toast.parentNode) {
+                toast.parentNode.removeChild(toast);
+            }
+        }, 5000);
+    }
+    
+    // Focus on OTP input on page load
+    otpInput.focus();
+});
+</script>
+{% endblock %}
