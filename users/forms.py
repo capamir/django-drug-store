@@ -8,7 +8,6 @@ from .validators import IranianPostalCodeValidator, IranianPhoneValidator, Irani
 class PhoneNumberForm(forms.Form):
     phone_number = forms.CharField(
         max_length=11,
-        validators=[IranianPhoneValidator()],
         widget=forms.TextInput(attrs={
             'class': 'form-control',
             'placeholder': '09123456789',
@@ -16,7 +15,12 @@ class PhoneNumberForm(forms.Form):
         }),
         label='شماره موبایل'
     )
-
+    def clean_phone_number(self):
+        phone = self.cleaned_data['phone_number']
+        # Basic validation without using custom validator
+        if not phone.isdigit() or not phone.startswith('09') or len(phone) != 11:
+            raise forms.ValidationError('شماره موبایل نامعتبر است')
+        return phone
 
 class OTPVerificationForm(forms.Form):
     phone_number = forms.CharField(widget=forms.HiddenInput())

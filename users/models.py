@@ -8,7 +8,7 @@ from .managers import UserManager, AddressManager
 from .validators import IranianPostalCodeValidator, IranianPhoneValidator, IranianNationalIdValidator
 
 class User(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(max_length=11, unique=True, validators=[IranianPhoneValidator()])
+    phone_number = models.CharField(max_length=11, unique=True)
     first_name = models.CharField(max_length=30, blank=True)
     last_name = models.CharField(max_length=30, blank=True)
     email = models.EmailField(blank=True, null=True)
@@ -22,10 +22,9 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     national_id = models.CharField(
         max_length=10, 
+        validators=[IranianNationalIdValidator],
         blank=True, 
         help_text='کد ملی',
-        validators=[IranianNationalIdValidator()]
-
     )
     birth_date = models.DateField(blank=True, null=True)
     gender = models.CharField(
@@ -251,7 +250,7 @@ class Address(models.Model):
     alley = models.CharField(max_length=100, blank=True, help_text='کوچه/پلاک')
     building_number = models.CharField(max_length=20, blank=True, help_text='شماره ساختمان')
     unit = models.CharField(max_length=10, blank=True, help_text='واحد')
-    postal_code = models.CharField(max_length=10, help_text='کد پستی', validators=[IranianPostalCodeValidator()])
+    postal_code = models.CharField(max_length=10, help_text='کد پستی', validators=[IranianPostalCodeValidator])
     
     # Contact Information
     recipient_name = models.CharField(
@@ -261,7 +260,7 @@ class Address(models.Model):
     recipient_phone = models.CharField(
         max_length=11, 
         help_text='شماره تماس گیرنده',
-        validators=[IranianPhoneValidator()]
+        validators=[IranianPhoneValidator]
     )
     
     # Additional Information

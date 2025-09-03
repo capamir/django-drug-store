@@ -124,7 +124,10 @@ class OTPVerificationView(FormView):
         """Verify OTP and handle user authentication"""
         phone_number = form.cleaned_data['phone_number']
         entered_otp = form.cleaned_data['otp_code']
-        
+        print(f"Before setting session: {dict(self.request.session)}")
+        self.request.session['otp_verified'] = True
+        self.request.session['phone_number'] = phone_number
+        print(f"After setting session: {dict(self.request.session)}")
         try:
             # Get the latest OTP for this phone number
             otp_instance = OTPVerification.get_latest_otp(phone_number)
@@ -188,9 +191,9 @@ class OTPVerificationView(FormView):
     
     def _handle_new_user_registration(self, phone_number):
         """Handle new user registration flow"""
-        # Mark OTP as verified in session for registration step
         self.request.session['otp_verified'] = True
         self.request.session['otp_verified_at'] = timezone.now().isoformat()
+        self.request.session['user_exists'] = False  # Explicitly set this
         
         messages.success(
             self.request,
@@ -306,6 +309,8 @@ class UserRegistrationView(FormView):
     
     def dispatch(self, request, *args, **kwargs):
         """Validate registration session and redirect if needed"""
+        print(f"Registration view session: {dict(self.request.session)}")
+
         # Check if user is already authenticated
         if request.user.is_authenticated:
             messages.info(request, 'شما قبلاً وارد شده‌اید')
@@ -322,16 +327,21 @@ class UserRegistrationView(FormView):
         """Check if registration session is valid"""
         session = self.request.session
         
+        # Debug: Print session data
+        print(f"Session data: {dict(session)}")
+        
         # Required session data
-        required_keys = ['phone_number', 'otp_verified', 'user_exists']
-        if not all(session.get(key) for key in required_keys):
+        if not session.get('phone_number'):
+            return False
+        if not session.get('otp_verified'):
             return False
         
-        # Must be for new user registration
-        if session.get('user_exists', True):
+        # Must be for new user registration - IMPORTANT FIX
+        if session.get('user_exists') is not False:  # Changed this line
+            print("Session indicates existing user, not new registration")
             return False
         
-        # Check session hasn't expired (10 minutes after OTP verification)
+        # Check session hasn't expired
         otp_verified_at = session.get('otp_verified_at')
         if otp_verified_at:
             try:
@@ -342,7 +352,7 @@ class UserRegistrationView(FormView):
                 return False
         
         return True
-    
+
     def get_form(self, form_class=None):
         """Pre-populate form with session data"""
         form = super().get_form(form_class)

@@ -1,4 +1,4 @@
-{% extends 'users/auth-base.html' %}
+{% extends 'auth-base.html' %}
 {% load static %}
 
 {% block title %}ورود / ثبت نام - داروخانه آنلاین{% endblock %}
@@ -131,7 +131,7 @@
                         <!-- Back to home -->
                         <div class="mt-4 text-center">
                             <span>
-                                <a href="{% url 'home' %}" class="text-decoration-none">
+                                <a href="{% url 'products:home' %}" class="text-decoration-none">
                                     <i class="fas fa-arrow-right me-1"></i>
                                     بازگشت به صفحه اصلی
                                 </a>

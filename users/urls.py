@@ -5,13 +5,11 @@ from . import views
 app_name = 'users'
 
 urlpatterns = [
-    # Authentication
-    path('auth/', views.AuthView.as_view(), name='auth'),
-    path('logout/', views.LogoutView.as_view(), name='logout'),
+    # Authentication Flow
+    path('login/', views.PhoneEntryView.as_view(), name='phone_entry'),
+    path('verify/', views.OTPVerificationView.as_view(), name='otp_verification'),  
+    path('register/', views.UserRegistrationView.as_view(), name='user_registration'),
     
-    # Dashboard
-    path('dashboard/', views.DashboardView.as_view(), name='dashboard'),
-    
-    # AJAX endpoints
-    path('api/resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
+    # AJAX endpoint for OTP resend
+    path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
 ]
