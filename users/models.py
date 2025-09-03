@@ -1,6 +1,7 @@
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from django.utils import timezone
+from datetime import timedelta
 import random
 import string
 from .managers import UserManager, AddressManager
@@ -127,11 +128,80 @@ class OTPVerification(models.Model):
         return timezone.now() > self.expires_at
     
     @classmethod
-    def generate_otp(cls, phone_number):
-        """Generate a new OTP for the given phone number"""
+    def can_generate_otp(cls, phone_number):
+        """Check if OTP can be generated (rate limiting)"""
         from django.conf import settings
         
-        # Invalidate previous OTPs
+        rate_limit_minutes = getattr(settings, 'OTP_RATE_LIMIT_MINUTES', 2)
+        cutoff_time = timezone.now() - timedelta(minutes=rate_limit_minutes)
+        
+        recent_otps = cls.objects.filter(
+            phone_number=phone_number,
+            created_at__gte=cutoff_time
+        ).count()
+        
+        max_requests = getattr(settings, 'OTP_MAX_REQUESTS_PER_PERIOD', 3)
+        return recent_otps < max_requests
+    
+    @classmethod
+    def generate_otp(cls, phone_number):
+        """Generate a new OTP for the given phone number"""
+        otp, _ = cls.generate_otp_with_user_status(phone_number)
+        return otp
+    
+    @classmethod
+    def get_latest_otp(cls, phone_number):
+        """Get the latest unused OTP for phone number"""
+        return cls.objects.filter(
+            phone_number=phone_number,
+            is_used=False
+        ).first()
+    
+    def verify_otp(self, entered_otp):
+        """Verify the entered OTP"""
+        from django.conf import settings
+        
+        max_attempts = getattr(settings, 'OTP_MAX_ATTEMPTS', 3)
+        
+        if self.is_used or self.is_expired:
+            return False, "کد تأیید منقضی شده یا قبلاً استفاده شده"
+        
+        if self.attempts >= max_attempts:
+            return False, "تعداد تلاش‌های مجاز تمام شده"
+        
+        self.attempts += 1
+        self.save()
+        
+        if self.otp_code == entered_otp:
+            self.is_verified = True
+            self.is_used = True
+            self.save()
+            return True, "کد تأیید با موفقیت تأیید شد"
+        
+        remaining = max_attempts - self.attempts
+        return False, f"کد تأیید اشتباه. {remaining} تلاش باقی مانده"
+    
+    def get_time_remaining(self):
+        """Get remaining time in seconds until expiration"""
+        if self.is_expired:
+            return 0
+        
+        remaining = self.expires_at - timezone.now()
+        return max(0, int(remaining.total_seconds()))
+    
+    @classmethod
+    def generate_otp_with_user_status(cls, phone_number):
+        """Generate OTP and return user existence status"""
+        from django.conf import settings
+        
+        # Check if user exists
+        user_exists = User.objects.filter(phone_number=phone_number).exists()
+        
+        # Check rate limiting
+        if not cls.can_generate_otp(phone_number):
+            raise ValueError("لطفاً ۲ دقیقه صبر کنید و مجدداً تلاش کنید")
+        
+        # Invalidate previous unused OTPs
         cls.objects.filter(
             phone_number=phone_number,
             is_used=False
@@ -139,7 +209,7 @@ class OTPVerification(models.Model):
         
         # Generate new OTP
         otp_code = ''.join(random.choices(string.digits, k=6))
-        expires_at = timezone.now() + timezone.timedelta(
+        expires_at = timezone.now() + timedelta(
             minutes=getattr(settings, 'OTP_EXPIRE_MINUTES', 5)
         )
         
@@ -149,32 +219,8 @@ class OTPVerification(models.Model):
             expires_at=expires_at
         )
         
-        return otp
-    
-    def verify_otp(self, entered_otp):
-        """Verify the entered OTP"""
-        from django.conf import settings
-        
-        max_attempts = getattr(settings, 'OTP_MAX_ATTEMPTS', 3)
-        
-        if self.is_used or self.is_expired:
-            return False, "OTP has expired or already been used"
-        
-        if self.attempts >= max_attempts:
-            return False, "Maximum attempts exceeded"
-        
-        self.attempts += 1
-        self.save()
-        
-        if self.otp_code == entered_otp:
-            self.is_verified = True
-            self.is_used = True
-            self.save()
-            return True, "OTP verified successfully"
-        
-        return False, f"Invalid OTP. {max_attempts - self.attempts} attempts remaining"
+        return otp, user_exists
 
-# users/models.py
 class Address(models.Model):
     ADDRESS_TYPES = [
         ('home', 'خانه'),

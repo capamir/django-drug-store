@@ -1,0 +1,198 @@
+{% extends 'users/auth-base.html' %}
+{% load static %}
+
+{% block title %}ورود / ثبت نام - داروخانه آنلاین{% endblock %}
+
+{% block description %}برای ورود یا ثبت نام در داروخانه آنلاین، شماره موبایل خود را وارد کنید{% endblock %}
+
+{% block content %}
+<section class="p-0 d-flex align-items-center position-relative overflow-hidden">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Side - Welcome Section -->
+            <div class="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
+                <div class="p-3 p-lg-5">
+                    <!-- Title -->
+                    <div class="text-center">
+                        <h2 class="fw-bold fs-3">به داروخانه آنلاین خوش آمدید</h2>
+                        <p class="mb-0 h6 fw-light">سلامتی شما، اولویت ماست!</p>
+                    </div>
+                    <!-- SVG Image -->
+                    <img src="{% static 'assets/images/element/02.svg' %}" class="mt-5" alt="داروخانه آنلاین">
+                    <!-- Info -->
+                    <div class="d-sm-flex mt-5 align-items-center justify-content-center">
+                        <ul class="avatar-group mb-2 mb-sm-0">
+                            <li class="avatar avatar-sm">
+                                <img class="avatar-img rounded-circle" src="{% static 'assets/images/avatar/01.jpg' %}" alt="مشتری">
+                            </li>
+                            <li class="avatar avatar-sm">
+                                <img class="avatar-img rounded-circle" src="{% static 'assets/images/avatar/02.jpg' %}" alt="مشتری">
+                            </li>
+                            <li class="avatar avatar-sm">
+                                <img class="avatar-img rounded-circle" src="{% static 'assets/images/avatar/03.jpg' %}" alt="مشتری">
+                            </li>
+                            <li class="avatar avatar-sm">
+                                <img class="avatar-img rounded-circle" src="{% static 'assets/images/avatar/04.jpg' %}" alt="مشتری">
+                            </li>
+                        </ul>
+                        <!-- Content -->
+                        <p class="mb-0 h6 fw-light ms-0 ms-sm-3">بیش از ۱۰۰۰ مشتری به ما اعتماد کردند، حالا نوبت شماست.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Form Section -->
+            <div class="col-12 col-lg-6 m-auto">
+                <div class="row my-5">
+                    <div class="col-sm-10 col-xl-8 m-auto">
+                        <!-- Title -->
+                        <img src="{% static 'assets/images/element/03.svg' %}" class="h-40px mb-2" alt="">
+                        <h2>{{ page_title }}</h2>
+                        <p class="mb-4">{{ page_description }}</p>
+                    
+                        <!-- Form START -->
+                        <form method="post" id="phoneForm">
+                            {% csrf_token %}
+                            
+                            <!-- Phone Number -->
+                            <div class="mb-4">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    {{ form.phone_number.label }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-phone-fill"></i>
+                                    </span>
+                                    {{ form.phone_number }}
+                                </div>
+                                <!-- Field Errors -->
+                                {% if form.phone_number.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.phone_number.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <!-- Help Text -->
+                                <div class="form-text small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    شماره موبایل خود را با ۰۹ وارد کنید
+                                </div>
+                            </div>
+
+                            <!-- Terms Agreement -->
+                            <div class="mb-4">
+                                <div class="form-check">
+                                    <input type="checkbox" class="form-check-input" id="terms-checkbox" required>
+                                    <label class="form-check-label" for="terms-checkbox">
+                                        با ادامه، <a href="#" class="text-decoration-none">شرایط و قوانین</a> 
+                                        و <a href="#" class="text-decoration-none">حریم خصوصی</a> را می‌پذیرم.
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="align-items-center mt-0">
+                                <div class="d-grid">
+                                    <button class="btn btn-primary btn-lg mb-0" type="submit" id="submitBtn">
+                                        <i class="fas fa-paper-plane me-2"></i>
+                                        ارسال کد تأیید
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- Form END -->
+
+                        <!-- Divider -->
+                        <div class="position-relative my-4">
+                            <hr>
+                            <p class="small position-absolute top-50 start-50 translate-middle bg-body px-3">
+                                <i class="fas fa-shield-alt text-success me-1"></i>
+                                امن و سریع
+                            </p>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="row g-3 text-center">
+                            <div class="col-4">
+                                <i class="fas fa-lock text-primary fa-2x mb-2"></i>
+                                <p class="small mb-0">امنیت بالا</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-shipping-fast text-success fa-2x mb-2"></i>
+                                <p class="small mb-0">ارسال سریع</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-headset text-info fa-2x mb-2"></i>
+                                <p class="small mb-0">پشتیبانی ۲۴/۷</p>
+                            </div>
+                        </div>
+
+                        <!-- Back to home -->
+                        <div class="mt-4 text-center">
+                            <span>
+                                <a href="{% url 'home' %}" class="text-decoration-none">
+                                    <i class="fas fa-arrow-right me-1"></i>
+                                    بازگشت به صفحه اصلی
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('phoneForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const phoneInput = document.getElementById('{{ form.phone_number.id_for_label }}');
+    const termsCheckbox = document.getElementById('terms-checkbox');
+    
+    // Phone input formatting
+    phoneInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+        if (value.length > 11) {
+            value = value.substring(0, 11);
+        }
+        e.target.value = value;
+        
+        // Update submit button state
+        updateSubmitButton();
+    });
+    
+    // Terms checkbox change
+    termsCheckbox.addEventListener('change', updateSubmitButton);
+    
+    function updateSubmitButton() {
+        const phoneValid = phoneInput.value.length === 11 && phoneInput.value.startsWith('09');
+        const termsAccepted = termsCheckbox.checked;
+        
+        submitBtn.disabled = !(phoneValid && termsAccepted);
+        
+        if (phoneValid && termsAccepted) {
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane me-2"></i>ارسال کد تأیید';
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-primary');
+        } else {
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>لطفاً فرم را تکمیل کنید';
+            submitBtn.classList.remove('btn-primary');
+            submitBtn.classList.add('btn-secondary');
+        }
+    }
+    
+    // Form submission loading state
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال ارسال...';
+    });
+    
+    // Initialize button state
+    updateSubmitButton();
+});
+</script>
+{% endblock %}
