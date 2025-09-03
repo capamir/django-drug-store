@@ -23,6 +23,46 @@ class UserManager(BaseUserManager):
 
         return self.create_user(phone_number, password, **extra_fields)
 
+    def create_verified_user(self, phone_number, **extra_fields):
+        """Create user with verified phone number"""
+        if not phone_number:
+            raise ValueError('Phone number is required')
+        
+        # Set defaults for verified user
+        extra_fields.setdefault('is_phone_verified', True)
+        extra_fields.setdefault('is_active', True)
+        
+        user = self.model(phone_number=phone_number, **extra_fields)
+        user.save(using=self._db)
+        return user
+    
+    def complete_registration(self, phone_number, first_name, last_name, email=None):
+        """Complete user registration after OTP verification"""
+        try:
+            # Check if user already exists
+            if self.filter(phone_number=phone_number).exists():
+                raise ValueError("کاربر با این شماره قبلاً ثبت نام کرده است")
+            
+            # Create new user
+            user = self.create_verified_user(
+                phone_number=phone_number,
+                first_name=first_name.strip(),
+                last_name=last_name.strip(),
+                email=email.strip() if email else '',
+            )
+            
+            return user
+            
+        except Exception as e:
+            raise ValueError(f"خطا در ثبت نام: {str(e)}")
+    
+    def get_registration_data(self, phone_number):
+        """Get data needed for registration form"""
+        return {
+            'phone_number': phone_number,
+        }
+    
+
 class AddressManager(models.Manager):
     def active(self):
         """Get active addresses only"""

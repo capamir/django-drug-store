@@ -1,0 +1,259 @@
+{% extends 'users/auth-base.html' %}
+{% load static %}
+
+{% block title %}تکمیل ثبت نام - داروخانه آنلاین{% endblock %}
+
+{% block description %}تکمیل اطلاعات ثبت نام در داروخانه آنلاین{% endblock %}
+
+{% block content %}
+<section class="p-0 d-flex align-items-center position-relative overflow-hidden">
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Left Side - Welcome Section -->
+            <div class="col-12 col-lg-6 d-md-flex align-items-center justify-content-center bg-primary bg-opacity-10 vh-lg-100">
+                <div class="p-3 p-lg-5">
+                    <!-- Title -->
+                    <div class="text-center">
+                        <h2 class="fw-bold fs-3">یک قدم تا تکمیل ثبت نام!</h2>
+                        <p class="mb-0 h6 fw-light">شماره موبایل شما تأیید شد</p>
+                    </div>
+                    <!-- SVG Image -->
+                    <img src="{% static 'assets/images/element/02.svg' %}" class="mt-5" alt="تکمیل ثبت نام">
+                    
+                    <!-- Progress Steps -->
+                    <div class="mt-5">
+                        <div class="d-flex justify-content-center">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-success text-white p-2 me-2">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <span class="small text-success me-3">شماره موبایل</span>
+                                
+                                <div class="rounded-circle bg-success text-white p-2 me-2">
+                                    <i class="fas fa-check"></i>
+                                </div>
+                                <span class="small text-success me-3">کد تأیید</span>
+                                
+                                <div class="rounded-circle bg-primary text-white p-2 me-2">
+                                    <i class="fas fa-user"></i>
+                                </div>
+                                <span class="small text-primary">تکمیل اطلاعات</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Info -->
+                    <div class="text-center mt-4">
+                        <div class="bg-white rounded-3 p-3 shadow-sm">
+                            <i class="bi bi-phone-fill text-success fa-2x mb-2"></i>
+                            <h6 class="mb-0">{{ masked_phone }}</h6>
+                            <small class="text-muted">شماره تأیید شده</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Side - Form Section -->
+            <div class="col-12 col-lg-6 m-auto">
+                <div class="row my-5">
+                    <div class="col-sm-10 col-xl-8 m-auto">
+                        <!-- Title -->
+                        <img src="{% static 'assets/images/element/03.svg' %}" class="h-40px mb-2" alt="">
+                        <h2>{{ page_title }}</h2>
+                        <p class="mb-4">{{ page_description }}</p>
+                    
+                        <!-- Form START -->
+                        <form method="post" id="registrationForm">
+                            {% csrf_token %}
+                            
+                            <!-- Non-field errors -->
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+
+                            <!-- Phone Number (readonly) -->
+                            <div class="mb-4">
+                                <label for="{{ form.phone_number.id_for_label }}" class="form-label">
+                                    {{ form.phone_number.label }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-phone-fill text-success"></i>
+                                    </span>
+                                    {{ form.phone_number }}
+                                </div>
+                                <div class="form-text small">
+                                    <i class="fas fa-check-circle text-success me-1"></i>
+                                    شماره موبایل تأیید شده
+                                </div>
+                            </div>
+
+                            <!-- First Name -->
+                            <div class="mb-4">
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    {{ form.first_name.label }} *
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    {{ form.first_name }}
+                                </div>
+                                {% if form.first_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.first_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Last Name -->
+                            <div class="mb-4">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">
+                                    {{ form.last_name.label }} *
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-person-fill"></i>
+                                    </span>
+                                    {{ form.last_name }}
+                                </div>
+                                {% if form.last_name.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.last_name.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Email (Optional) -->
+                            <div class="mb-4">
+                                <label for="{{ form.email.id_for_label }}" class="form-label">
+                                    {{ form.email.label }}
+                                </label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-light rounded-start border-0 text-secondary px-3">
+                                        <i class="bi bi-envelope-fill"></i>
+                                    </span>
+                                    {{ form.email }}
+                                </div>
+                                {% if form.email.errors %}
+                                    <div class="text-danger small mt-1">
+                                        {% for error in form.email.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text small">
+                                    <i class="fas fa-info-circle me-1"></i>
+                                    برای دریافت اطلاعیه‌های سفارش (اختیاری)
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="align-items-center mt-0">
+                                <div class="d-grid">
+                                    <button class="btn btn-success btn-lg mb-0" type="submit" id="submitBtn">
+                                        <i class="fas fa-user-plus me-2"></i>
+                                        تکمیل ثبت نام و ورود
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                        <!-- Form END -->
+
+                        <!-- Divider -->
+                        <div class="position-relative my-4">
+                            <hr>
+                            <p class="small position-absolute top-50 start-50 translate-middle bg-body px-3">
+                                <i class="fas fa-shield-alt text-success me-1"></i>
+                                اطلاعات شما محفوظ است
+                            </p>
+                        </div>
+
+                        <!-- Benefits -->
+                        <div class="row g-3 text-center">
+                            <div class="col-4">
+                                <i class="fas fa-user-shield text-success fa-2x mb-2"></i>
+                                <p class="small mb-0">حریم خصوصی</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-bell text-info fa-2x mb-2"></i>
+                                <p class="small mb-0">اطلاع‌رسانی</p>
+                            </div>
+                            <div class="col-4">
+                                <i class="fas fa-headset text-primary fa-2x mb-2"></i>
+                                <p class="small mb-0">پشتیبانی</p>
+                            </div>
+                        </div>
+
+                        <!-- Back option -->
+                        <div class="mt-4 text-center">
+                            <span class="small">
+                                مشکل دارید؟ 
+                                <a href="{% url 'users:phone_entry' %}" class="text-decoration-none">
+                                    <i class="fas fa-arrow-right me-1"></i>
+                                    شروع مجدد
+                                </a>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const firstNameInput = document.getElementById('{{ form.first_name.id_for_label }}');
+    const lastNameInput = document.getElementById('{{ form.last_name.id_for_label }}');
+    
+    // Form validation
+    function validateForm() {
+        const firstName = firstNameInput.value.trim();
+        const lastName = lastNameInput.value.trim();
+        
+        const isValid = firstName.length >= 2 && lastName.length >= 2;
+        
+        submitBtn.disabled = !isValid;
+        
+        if (isValid) {
+            submitBtn.innerHTML = '<i class="fas fa-user-plus me-2"></i>تکمیل ثبت نام و ورود';
+            submitBtn.classList.remove('btn-secondary');
+            submitBtn.classList.add('btn-success');
+        } else {
+            submitBtn.innerHTML = '<i class="fas fa-lock me-2"></i>لطفاً نام و نام خانوادگی را وارد کنید';
+            submitBtn.classList.remove('btn-success');
+            submitBtn.classList.add('btn-secondary');
+        }
+    }
+    
+    // Add event listeners
+    firstNameInput.addEventListener('input', validateForm);
+    lastNameInput.addEventListener('input', validateForm);
+    
+    // Form submission
+    form.addEventListener('submit', function() {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال ایجاد حساب...';
+    });
+    
+    // Initial validation
+    validateForm();
+    
+    // Focus on first name
+    firstNameInput.focus();
+});
+</script>
+{% endblock %}

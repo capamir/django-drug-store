@@ -5,7 +5,9 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.contrib.auth import login
 from django.http import JsonResponse
-from .forms import PhoneNumberForm, OTPVerificationForm
+from datetime import timedelta
+
+from .forms import PhoneNumberForm, OTPVerificationForm, UserRegistrationForm
 from .models import User, OTPVerification
 
 
@@ -291,3 +293,127 @@ class ResendOTPView(FormView):
         logger = logging.getLogger(__name__)
         logger.info(f'Resend OTP for {phone_number}: {otp_code}')
         return True
+
+
+class UserRegistrationView(FormView):
+    """
+    Step 3: Complete user registration after OTP verification
+    Only for new users who have successfully verified their phone number
+    """
+    template_name = 'users/user_registration.html'
+    form_class = UserRegistrationForm
+    success_url = reverse_lazy('users:user_dashboard')
+    
+    def dispatch(self, request, *args, **kwargs):
+        """Validate registration session and redirect if needed"""
+        # Check if user is already authenticated
+        if request.user.is_authenticated:
+            messages.info(request, 'شما قبلاً وارد شده‌اید')
+            return redirect('users:user_dashboard')
+        
+        # Validate session data
+        if not self._is_valid_registration_session():
+            messages.error(request, 'جلسه منقضی شده. لطفاً مجدداً تلاش کنید')
+            return redirect('users:phone_entry')
+        
+        return super().dispatch(request, *args, **kwargs)
+    
+    def _is_valid_registration_session(self):
+        """Check if registration session is valid"""
+        session = self.request.session
+        
+        # Required session data
+        required_keys = ['phone_number', 'otp_verified', 'user_exists']
+        if not all(session.get(key) for key in required_keys):
+            return False
+        
+        # Must be for new user registration
+        if session.get('user_exists', True):
+            return False
+        
+        # Check session hasn't expired (10 minutes after OTP verification)
+        otp_verified_at = session.get('otp_verified_at')
+        if otp_verified_at:
+            try:
+                verified_time = timezone.datetime.fromisoformat(otp_verified_at)
+                if timezone.now() - verified_time > timedelta(minutes=10):
+                    return False
+            except (ValueError, TypeError):
+                return False
+        
+        return True
+    
+    def get_form(self, form_class=None):
+        """Pre-populate form with session data"""
+        form = super().get_form(form_class)
+        phone_number = self.request.session.get('phone_number')
+        
+        # Use manager method to get registration data
+        registration_data = User.objects.get_registration_data(phone_number)
+        form.fields['phone_number'].initial = registration_data['phone_number']
+        
+        return form
+    
+    def form_valid(self, form):
+        """Create user account and login"""
+        phone_number = self.request.session.get('phone_number')
+        
+        try:
+            # Use manager method for clean user creation
+            user = User.objects.complete_registration(
+                phone_number=phone_number,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                email=form.cleaned_data['email']
+            )
+            
+            # Login the new user
+            login(self.request, user)
+            
+            # Clear registration session data
+            self._clear_registration_session()
+            
+            # Welcome message
+            messages.success(
+                self.request,
+                f'خوش آمدید {user.get_full_name()}! حساب شما با موفقیت ایجاد شد'
+            )
+            
+            return super().form_valid(form)
+            
+        except ValueError as e:
+            messages.error(self.request, str(e))
+            return self.form_invalid(form)
+        except Exception as e:
+            messages.error(
+                self.request,
+                'خطا در ایجاد حساب کاربری. لطفاً مجدداً تلاش کنید'
+            )
+            return self.form_invalid(form)
+    
+    def _clear_registration_session(self):
+        """Clear registration-related session data"""
+        session_keys = [
+            'phone_number', 'user_exists', 'otp_generated_at',
+            'otp_verified', 'otp_verified_at'
+        ]
+        for key in session_keys:
+            self.request.session.pop(key, None)
+    
+    def get_context_data(self, **kwargs):
+        """Add context for template"""
+        context = super().get_context_data(**kwargs)
+        
+        phone_number = self.request.session.get('phone_number')
+        masked_phone = f"{phone_number[:4]}***{phone_number[-2:]}" if phone_number else ''
+        
+        context.update({
+            'page_title': 'تکمیل ثبت نام',
+            'page_description': 'برای تکمیل ثبت نام، اطلاعات زیر را وارد کنید',
+            'phone_number': phone_number,
+            'masked_phone': masked_phone,
+            'step_number': 3,
+            'total_steps': 3,
+        })
+        
+        return context
