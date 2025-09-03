@@ -52,15 +52,23 @@ class Product(models.Model):
         null=True, 
         help_text='تصویر محصول'
     )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     objects = ProductManager()
 
     @property
     def effective_unit_price(self):
-        """Calculate discounted price based on discount_percent and discount_per_unit."""
-        price_after_percent = self.unit_price * (100 - self.discount_percent) // 100
-        price_after_discount = max(0, price_after_percent - self.discount_per_unit)
-        return price_after_discount
+        """Calculate discounted price with proper decimal handling."""
+        from decimal import Decimal
+        
+        # Handle percentage discount
+        price_after_percent = self.unit_price * (Decimal('100') - Decimal(str(self.discount_percent))) / Decimal('100')
+        
+        # Apply fixed discount
+        final_price = max(Decimal('0'), price_after_percent - Decimal(str(self.discount_per_unit)))
+        
+        return final_price
     
     def __str__(self):
         return self.name
@@ -68,6 +76,25 @@ class Product(models.Model):
     @property
     def low_stock(self):
         return self.quantity <= self.reorder_level
+    
+    @property
+    def has_discount(self):
+        """Check if product has any discount applied."""
+        return self.discount_percent > 0 or self.discount_per_unit > 0
+
+    @property
+    def is_available(self):
+        """Check if product is available for purchase."""
+        return self.is_active and self.quantity > 0
+
+    def get_stock_status(self):
+        """Get stock status with Persian message."""
+        if self.quantity == 0:
+            return {'status': 'out_of_stock', 'message': 'ناموجود'}
+        elif self.low_stock:
+            return {'status': 'low_stock', 'message': f'تنها {self.quantity} عدد باقی مانده'}
+        else:
+            return {'status': 'in_stock', 'message': 'موجود'}
 
 
 class StockMovement(models.Model):

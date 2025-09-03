@@ -23,5 +23,21 @@ class ProductListView(ListView):
 
 class ProductDetailView(DetailView):
     model = Product
-    template_name = 'products/product_detail.html'  # Customize path
+    template_name = 'products/product_detail.html'
     context_object_name = 'product'
+    
+    def get_queryset(self):
+        """Get optimized queryset for active products only."""
+        return Product.objects.with_related_data().filter(is_active=True)
+    
+    def get_context_data(self, **kwargs):
+        """Add essential context for product detail page."""
+        context = super().get_context_data(**kwargs)
+        product = self.object
+        
+        # Use manager methods for clean separation
+        context['related_products'] = Product.objects.get_related_products(product)
+        context['breadcrumbs'] = Product.objects.get_category_breadcrumbs(product.category)
+        context['stock_status'] = product.get_stock_status()
+        
+        return context
