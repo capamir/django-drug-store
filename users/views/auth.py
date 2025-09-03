@@ -7,8 +7,8 @@ from django.contrib.auth import login
 from django.http import JsonResponse
 from datetime import timedelta
 
-from .forms import PhoneNumberForm, OTPVerificationForm, UserRegistrationForm
-from .models import User, OTPVerification
+from users.forms import PhoneNumberForm, OTPVerificationForm, UserRegistrationForm
+from users.models import User, OTPVerification
 
 
 class PhoneEntryView(FormView):
