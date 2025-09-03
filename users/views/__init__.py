@@ -3,9 +3,11 @@ from .auth import PhoneEntryView, OTPVerificationView, ResendOTPView, UserRegist
 from .dashboard import UserDashboardView
 
 __all__ = [
+    # auth
     'PhoneEntryView',
     'OTPVerificationView', 
     'ResendOTPView',
     'UserRegistrationView',
+    # dashboard
     'UserDashboardView',
 ]
