@@ -3,10 +3,11 @@ from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import messages
 from django.db import transaction
-from django.http import Http404
-from django.http import JsonResponse
+from django.http import JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.views.generic.edit import FormView
+from django.urls import reverse_lazy
 
 from products.models import Product
 from .cart import Cart
@@ -34,29 +35,112 @@ class CartView(View):
             'has_items': len(cart.cart) > 0,
         })
 
-class CartAddView(LoginRequiredMixin, View):
+class CartOperationView(LoginRequiredMixin, View):
+    """
+    Unified AJAX cart operations view.
+    Handles add, remove, and update quantity operations.
+    """
+    
     def post(self, request, product_id):
-        cart = Cart(request)
+        """Handle cart operations based on 'action' parameter."""
         product = get_object_or_404(Product, id=product_id)
-        form = CartAddForm(request.POST)
-        if form.is_valid():
-            quantity = form.cleaned_data['quantity']
-            try:
-                cart.add(product, quantity)
-                messages.success(request, f"محصول {product.name} به سبد خرید اضافه شد")
-            except ValueError as e:
-                messages.error(request, str(e))
+        cart = Cart(request)
+        action = request.POST.get('action', '').lower()
+        
+        if action == 'add':
+            return self._handle_add(request, cart, product)
+        elif action == 'remove':
+            return self._handle_remove(request, cart, product)
+        elif action == 'update':
+            return self._handle_update(request, cart, product)
         else:
-            messages.error(request, 'اطلاعات ارسالی نادرست است')
-        return redirect('orders:cart')
-
-class CartRemoveView(LoginRequiredMixin, View):
-    def get(self, request, product_id):
-        cart = Cart(request)
-        product = get_object_or_404(Product, id=product_id)
+            return JsonResponse({
+                'success': False,
+                'error': 'عملیات مشخص نشده است'
+            })
+    
+    def _handle_add(self, request, cart, product):
+        """Handle add to cart operation."""
+        form = CartAddForm(request.POST, product=product)
+        
+        if form.is_valid():
+            try:
+                quantity = form.cleaned_data['quantity']
+                cart.add(product, quantity)
+                
+                cart_data = cart.to_json()
+                return JsonResponse({
+                    'success': True,
+                    'message': f"محصول {product.name} به سبد خرید اضافه شد",
+                    'action': 'add',
+                    'product_id': product.id,
+                    'product_in_cart': True,
+                    'product_cart_quantity': cart.get_product_quantity(product),
+                    'stock_status': product.get_stock_status(),
+                    'cart_count': cart_data['count'],
+                    'cart_totals': cart_data['totals'],
+                })
+            except ValueError as e:
+                return JsonResponse({
+                    'success': False,
+                    'error': str(e),
+                    'stock_status': product.get_stock_status(),
+                    'available_quantity': product.quantity,
+                })
+        
+        return JsonResponse({
+            'success': False,
+            'error': 'اطلاعات ارسالی نادرست است',
+            'form_errors': form.errors,
+        })
+    
+    def _handle_remove(self, request, cart, product):
+        """Handle remove from cart operation."""
+        if not cart.is_product_in_cart(product):
+            return JsonResponse({
+                'success': False,
+                'error': f"محصول {product.name} در سبد خرید یافت نشد"
+            })
+        
         cart.remove(product)
-        messages.info(request, f"محصول {product.name} از سبد خرید حذف شد")
-        return redirect('orders:cart')
+        cart_data = cart.to_json()
+        
+        return JsonResponse({
+            'success': True,
+            'message': f"محصول {product.name} از سبد خرید حذف شد",
+            'action': 'remove',
+            'removed_product_id': product.id,
+            'product_in_cart': False,
+            'cart_count': cart_data['count'],
+            'cart_totals': cart_data['totals'],
+            'cart_has_items': cart_data['has_items'],
+        })
+    
+    def _handle_update(self, request, cart, product):
+        """Handle update quantity operation."""
+        try:
+            new_quantity = int(request.POST.get('quantity', 0))
+            cart.update_quantity(product, new_quantity)
+            
+            cart_data = cart.to_json()
+            return JsonResponse({
+                'success': True,
+                'message': f'تعداد محصول {product.name} به‌روزرسانی شد',
+                'action': 'update',
+                'product_id': product.id,
+                'product_cart_quantity': new_quantity,
+                'cart_count': cart_data['count'],
+                'cart_totals': cart_data['totals'],
+                'stock_status': product.get_stock_status(),
+            })
+        except (ValueError, TypeError) as e:
+            return JsonResponse({
+                'success': False,
+                'error': str(e) if isinstance(e, ValueError) else 'تعداد وارد شده نامعتبر است',
+                'available_quantity': product.quantity,
+                'stock_status': product.get_stock_status(),
+            })
+
 
 class OrderDetailView(LoginRequiredMixin, View):
     def get(self, request, order_id):
