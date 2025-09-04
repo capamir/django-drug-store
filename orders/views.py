@@ -14,9 +14,25 @@ from .forms import CartAddForm
 from .models import Order, OrderItem
 
 class CartView(View):
+    """
+    Cart display view with AJAX-first approach.
+    """
+    
     def get(self, request):
         cart = Cart(request)
-        return render(request, 'orders/cart.html', {'cart': cart})
+        
+        # AJAX requests get JSON data
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return JsonResponse({
+                'success': True,
+                **cart.to_json()
+            })
+        
+        # Regular requests get template with minimal data
+        return render(request, 'orders/cart.html', {
+            'cart_count': len(cart),
+            'has_items': len(cart.cart) > 0,
+        })
 
 class CartAddView(LoginRequiredMixin, View):
     def post(self, request, product_id):
