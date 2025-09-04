@@ -55,6 +55,13 @@
     .loading-spinner {
         display: none;
     }
+    .toast {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+        min-width: 300px;
+    }
 </style>
 {% endblock %}
 
@@ -82,7 +89,7 @@
                 </div>
 
                 <!-- Empty cart message -->
-                <div class="empty-cart d-none">
+                <div class="empty-cart d-none" id="empty-cart-message">
                     <i class="fas fa-shopping-cart fa-3x mb-3"></i>
                     <h4 class="mb-3">سبد خرید شما خالی است</h4>
                     <p class="mb-4">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
@@ -168,7 +175,7 @@ class CartManager {
     constructor() {
         this.cartContainer = document.getElementById('cart-container');
         this.cartTable = document.getElementById('cart-table');
-        this.emptyCart = document.querySelector('.empty-cart');
+        this.emptyCart = document.getElementById('empty-cart-message');
         this.loadingSpinner = document.querySelector('.loading-spinner');
         this.cartItemsCount = document.getElementById('cart-items-count');
         this.cartItemsTbody = document.getElementById('cart-items-tbody');
@@ -332,6 +339,10 @@ class CartManager {
             if (data.success) {
                 this.loadCart(); // Refresh cart
                 this.showMessage(data.message, 'success');
+                // Dispatch cart update event for header
+                if (window.dispatchCartUpdate) {
+                    window.dispatchCartUpdate();
+                }
             } else {
                 this.showMessage(data.error, 'error');
             }
@@ -362,6 +373,10 @@ class CartManager {
             if (data.success) {
                 this.loadCart(); // Refresh cart
                 this.showMessage(data.message, 'success');
+                // Dispatch cart update event for header
+                if (window.dispatchCartUpdate) {
+                    window.dispatchCartUpdate();
+                }
             } else {
                 this.showMessage(data.error, 'error');
             }
@@ -409,7 +424,7 @@ class CartManager {
     async clearCart() {
         if (!confirm('آیا از پاک کردن تمام محصولات سبد خرید مطمئن هستید؟')) return;
         
-        // Implementation would require a clear cart endpoint
+        // You'll need to implement a clear cart endpoint or remove all items one by one
         this.showMessage('قابلیت پاک کردن سبد در حال توسعه است', 'info');
     }
     
@@ -460,8 +475,7 @@ class CartManager {
     showMessage(message, type = 'info') {
         // Create toast notification
         const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} position-fixed`;
-        toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+        toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} toast`;
         toast.innerHTML = `
             <div class="d-flex align-items-center">
                 <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
@@ -478,6 +492,10 @@ class CartManager {
                 toast.remove();
             }
         }, 5000);
+    }
+    
+    showError(message) {
+        this.showMessage(message, 'error');
     }
 }
 
