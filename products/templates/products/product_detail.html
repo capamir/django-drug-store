@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
+{% load humanize %}
 
 {% block content %}
 <!-- =======================
@@ -15,9 +16,9 @@ Product Detail Page START -->
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb breadcrumb-dots">
                                 <li class="breadcrumb-item"><a href="{% url 'products:home' %}">خانه</a></li>
-                                {% for category in breadcrumbs %}
-                                    <li class="breadcrumb-item"><a href="#">{{ category.name }}</a></li>
-                                {% endfor %}
+                                {% if product.category %}
+                                    <li class="breadcrumb-item"><a href="#">{{ product.category.name }}</a></li>
+                                {% endif %}
                                 <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
                             </ol>
                         </nav>
@@ -26,7 +27,6 @@ Product Detail Page START -->
 
                     <!-- Title START -->
                     <div class="col-12">
-                        <!-- Title -->
                         <h1 class="fs-3">{{ product.name }}</h1>
                         <p>{{ product.description|truncatewords:30 }}</p>
                         
@@ -40,11 +40,15 @@ Product Detail Page START -->
                                 <i class="fas fa-barcode me-2"></i>بارکد: {{ product.barcode }}
                             </li>
                             {% endif %}
+                            {% if product.category %}
                             <li class="list-inline-item fw-light h6 me-3 mb-1 mb-sm-0">
                                 <i class="fas fa-layer-group me-2"></i>{{ product.category.name }}
                             </li>
+                            {% endif %}
                             <li class="list-inline-item fw-light h6">
-                                <i class="fas fa-{{ stock_status.status }} me-2"></i>{{ stock_status.message }}
+                                {% with stock_info=product.get_stock_status %}
+                                <i class="fas fa-{% if stock_info.status == 'in_stock' %}check-circle text-success{% elif stock_info.status == 'low_stock' %}exclamation-triangle text-warning{% else %}times-circle text-danger{% endif %} me-2"></i>{{ stock_info.message }}
+                                {% endwith %}
                             </li>
                         </ul>
                     </div>
@@ -66,13 +70,9 @@ Product Detail Page START -->
                     <!-- Product Details START -->
                     <div class="col-12">
                         <div class="card border">
-                            <!-- Card header START -->
                             <div class="card-header border-bottom">
                                 <h3 class="mb-0 fs-5">توضیحات محصول</h3>
                             </div>
-                            <!-- Card header END -->
-
-                            <!-- Card body START -->
                             <div class="card-body">
                                 {% if product.description %}
                                     <p class="mb-3">{{ product.description|linebreaks }}</p>
@@ -80,7 +80,7 @@ Product Detail Page START -->
                                     <p class="mb-3 text-muted">توضیحات تکمیلی برای این محصول ثبت نشده است.</p>
                                 {% endif %}
 
-                                <!-- Product Features (if applicable) -->
+                                <!-- Product Features -->
                                 <h5 class="mt-4">مشخصات محصول:</h5>
                                 <div class="row mb-3">
                                     <div class="col-md-6">
@@ -116,13 +116,12 @@ Product Detail Page START -->
                                     </div>
                                 </div>
                             </div>
-                            <!-- Card body END -->
                         </div>
                     </div>
                     <!-- Product Details END -->
 
                     <!-- Related Products START -->
-                    {% if related_products %}
+                    {% if product.related_products.all %}
                     <div class="col-12">
                         <div class="card border">
                             <div class="card-header border-bottom">
@@ -130,7 +129,7 @@ Product Detail Page START -->
                             </div>
                             <div class="card-body">
                                 <div class="row g-3">
-                                    {% for related in related_products %}
+                                    {% for related in product.related_products.all %}
                                     <div class="col-md-4">
                                         <div class="card h-100">
                                             {% if related.image %}
@@ -141,12 +140,12 @@ Product Detail Page START -->
                                                 <p class="text-success fw-bold mb-1">
                                                     {% if related.has_discount %}
                                                         <span class="text-decoration-line-through text-muted small">{{ related.unit_price|floatformat:0 }}</span>
-                                                        {{ related.effective_unit_price|floatformat:0 }} تومان
+                                                        {{ related.effective_unit_price|floatformat:0 }} ریال
                                                     {% else %}
-                                                        {{ related.unit_price|floatformat:0 }} تومان
+                                                        {{ related.unit_price|floatformat:0 }} ریال
                                                     {% endif %}
                                                 </p>
-                                                <a href="{% url 'product_detail' related.slug %}" class="btn btn-sm btn-outline-primary">مشاهده</a>
+                                                <a href="{% url 'products:product_detail' related.slug %}" class="btn btn-sm btn-outline-primary">مشاهده</a>
                                             </div>
                                         </div>
                                     </div>
@@ -170,24 +169,23 @@ Product Detail Page START -->
                             <div class="card card-body border p-4">
                                 <!-- Price and share button -->
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <!-- Price -->
                                     <div>
                                         {% if product.has_discount %}
                                             <h3 class="fw-bold mb-0 me-2 fs-5 text-success">
-                                                {{ product.effective_unit_price|floatformat:0 }} تومان
+                                                {{ product.effective_unit_price|floatformat:0|intcomma }} ریال
                                             </h3>
                                             <small class="text-decoration-line-through text-muted">
-                                                {{ product.unit_price|floatformat:0 }} تومان
+                                                {{ product.unit_price|floatformat:0|intcomma }} ریال
                                             </small>
                                             {% if product.discount_percent > 0 %}
                                                 <span class="badge bg-danger ms-1">{{ product.discount_percent }}% تخفیف</span>
                                             {% endif %}
                                         {% else %}
-                                            <h3 class="fw-bold mb-0 me-2 fs-5">{{ product.unit_price|floatformat:0 }} تومان</h3>
+                                            <h3 class="fw-bold mb-0 me-2 fs-5">{{ product.unit_price|floatformat:0|intcomma }} ریال</h3>
                                         {% endif %}
                                     </div>
                                     
-                                    <!-- Share button with dropdown -->
+                                    <!-- Share button -->
                                     <div class="dropdown">
                                         <a href="#" class="btn btn-sm btn-light rounded mb-0 small" role="button" id="dropdownShare" data-bs-toggle="dropdown" aria-expanded="false">
                                             <i class="fas fa-fw fa-share-alt"></i>
@@ -201,27 +199,47 @@ Product Detail Page START -->
                                 </div>
 
                                 <!-- Stock Status -->
-                                <div class="alert alert-{% if stock_status.status == 'in_stock' %}success{% elif stock_status.status == 'low_stock' %}warning{% else %}danger{% endif %} mt-3 mb-3">
-                                    <i class="fas fa-info-circle me-2"></i>{{ stock_status.message }}
+                                {% with stock_info=product.get_stock_status %}
+                                <div class="alert alert-{% if stock_info.status == 'in_stock' %}success{% elif stock_info.status == 'low_stock' %}warning{% else %}danger{% endif %} mt-3 mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>{{ stock_info.message }}
                                 </div>
+                                {% endwith %}
                                 
-                                <!-- Buttons -->
-                                <div class="mt-3 d-grid gap-2">
+                                <!-- Add to Cart Form -->
+                                <div class="mt-3">
                                     {% if product.is_available %}
-                                        <a href="#" class="btn btn-outline-primary">
-                                            <i class="fas fa-shopping-cart me-2"></i>افزودن به سبد
-                                        </a>
-                                        <a href="#" class="btn btn-success">
-                                            <i class="fas fa-credit-card me-2"></i>خرید فوری
-                                        </a>
+                                        <form method="post" action="{% url 'orders:cart_add' product.id %}">
+                                            {% csrf_token %}
+                                            
+                                            <!-- Quantity Selector -->
+                                            <div class="d-flex align-items-center mb-3">
+                                                <label for="quantity" class="form-label me-2 mb-0">تعداد:</label>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="decrease-qty">
+                                                    <i class="fas fa-minus"></i>
+                                                </button>
+                                                <input type="number" id="quantity" name="quantity" 
+                                                       class="form-control form-control-sm mx-2 text-center" 
+                                                       value="1" min="1" max="{{ product.quantity }}" style="width: 70px;" required>
+                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="increase-qty">
+                                                    <i class="fas fa-plus"></i>
+                                                </button>
+                                            </div>
+                                            <small class="text-muted d-block mb-3">حداکثر: {{ product.quantity }} عدد</small>
+                                            
+                                            <!-- Add to Cart Button -->
+                                            <div class="d-grid">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="fas fa-shopping-cart me-2"></i>افزودن به سبد خرید
+                                                </button>
+                                            </div>
+                                        </form>
                                     {% else %}
-                                        <button class="btn btn-secondary" disabled>
+                                        <button class="btn btn-secondary w-100" disabled>
                                             <i class="fas fa-times me-2"></i>موجود نیست
                                         </button>
                                     {% endif %}
                                 </div>
                                 
-                                <!-- Divider -->
                                 <hr>
 
                                 <!-- Product Specifications -->
@@ -237,10 +255,12 @@ Product Detail Page START -->
                                         <span>{{ product.barcode }}</span>
                                     </li>
                                     {% endif %}
+                                    {% if product.category %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span class="h6 fw-light mb-0"><i class="fas fa-fw fa-layer-group text-primary"></i>دسته‌بندی</span>
                                         <span>{{ product.category.name }}</span>
                                     </li>
+                                    {% endif %}
                                     <li class="list-group-item d-flex justify-content-between align-items-center">
                                         <span class="h6 fw-light mb-0"><i class="fas fa-fw fa-boxes text-primary"></i>موجودی</span>
                                         <span>{{ product.quantity }} عدد</span>
@@ -257,7 +277,6 @@ Product Detail Page START -->
                                     {% endif %}
                                 </ul>
                                 
-                                <!-- Divider -->
                                 <hr>
 
                                 <!-- Contact Info -->
@@ -277,30 +296,85 @@ Product Detail Page START -->
                             <div class="card card-body border p-4">
                                 <h4 class="mb-3 fs-5">دسته‌بندی‌های مرتبط</h4>
                                 <ul class="list-inline mb-0">
-                                    {% if product.category.parent %}
+                                    {% if product.category %}
+                                        {% if product.category.parent %}
+                                            <li class="list-inline-item">
+                                                <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.parent.name }}</a>
+                                            </li>
+                                        {% endif %}
                                         <li class="list-inline-item">
-                                            <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.parent.name }}</a>
+                                            <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.name }}</a>
                                         </li>
+                                        {% for sibling in product.category.children.all %}
+                                            <li class="list-inline-item">
+                                                <a class="btn btn-outline-light btn-sm" href="#">{{ sibling.name }}</a>
+                                            </li>
+                                        {% endfor %}
                                     {% endif %}
-                                    <li class="list-inline-item">
-                                        <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.name }}</a>
-                                    </li>
-                                    {% for sibling in product.category.children.all %}
-                                        <li class="list-inline-item">
-                                            <a class="btn btn-outline-light btn-sm" href="#">{{ sibling.name }}</a>
-                                        </li>
-                                    {% endfor %}
                                 </ul>
                             </div>  
                         </div>
                         <!-- Category Tags END -->
-                    </div><!-- Row End -->
+                    </div>
                 </div>  
             </div>
             <!-- Right sidebar END -->
-        </div><!-- Row END -->
+        </div>
     </div>
 </section>
 <!-- =======================
 Product Detail Page END -->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInput = document.getElementById('quantity');
+    const decreaseBtn = document.getElementById('decrease-qty');
+    const increaseBtn = document.getElementById('increase-qty');
+    
+    if (quantityInput && decreaseBtn && increaseBtn) {
+        const maxQuantity = parseInt(quantityInput.max);
+        
+        function updateButtons() {
+            const value = parseInt(quantityInput.value);
+            decreaseBtn.disabled = value <= 1;
+            increaseBtn.disabled = value >= maxQuantity;
+        }
+        
+        function decreaseQuantity() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue > 1) {
+                quantityInput.value = currentValue - 1;
+                updateButtons();
+            }
+        }
+        
+        function increaseQuantity() {
+            const currentValue = parseInt(quantityInput.value);
+            if (currentValue < maxQuantity) {
+                quantityInput.value = currentValue + 1;
+                updateButtons();
+            }
+        }
+        
+        function validateQuantity() {
+            const value = parseInt(quantityInput.value);
+            if (isNaN(value) || value < 1) {
+                quantityInput.value = 1;
+            } else if (value > maxQuantity) {
+                quantityInput.value = maxQuantity;
+            }
+            updateButtons();
+        }
+        
+        // Event listeners
+        decreaseBtn.addEventListener('click', decreaseQuantity);
+        increaseBtn.addEventListener('click', increaseQuantity);
+        quantityInput.addEventListener('input', validateQuantity);
+        quantityInput.addEventListener('change', validateQuantity);
+        
+        // Initial state
+        updateButtons();
+    }
+});
+</script>
 {% endblock %}

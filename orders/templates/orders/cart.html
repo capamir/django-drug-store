@@ -1,106 +1,63 @@
 {% extends "profile-base.html" %}
+
 {% load static %}
+{% load humanize %}
 
 {% block extra_css %}
 <style>
     .cart-item-image {
-        width: 60px;
-        height: 60px;
+        width: 80px;
+        height: 80px;
         object-fit: cover;
         border-radius: 8px;
     }
-    .quantity-controls {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-    .quantity-input {
-        width: 80px;
-        text-align: center;
-    }
-    .btn-quantity {
-        width: 35px;
-        height: 35px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .discount-badge {
-        font-size: 0.75em;
-        padding: 2px 6px;
-        border-radius: 4px;
-    }
-    .price-original {
-        text-decoration: line-through;
-        color: #6c757d;
-        font-size: 0.9em;
-    }
-    .price-effective {
-        color: #28a745;
-        font-weight: bold;
+    .cart-table {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
     }
     .cart-summary {
         background: #f8f9fa;
         border-radius: 10px;
         padding: 20px;
-        position: sticky;
-        top: 20px;
+        margin-top: 20px;
     }
     .empty-cart {
         text-align: center;
         padding: 60px 20px;
         color: #6c757d;
     }
-    .loading-spinner {
-        display: none;
+    .quantity-display {
+        font-weight: bold;
+        color: #495057;
     }
-    .toast {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        z-index: 9999;
-        min-width: 300px;
+    .remove-btn {
+        transition: all 0.3s ease;
+    }
+    .remove-btn:hover {
+        transform: scale(1.05);
     }
 </style>
 {% endblock %}
 
 {% block main_content %}
-<!-- Main content START -->
-<div class="col-xl-9">
+<div class="col-xl-12">
     <!-- Cart Card START -->
     <div class="card border bg-transparent rounded-3">
         <!-- Card header START -->
         <div class="card-header bg-transparent border-bottom d-flex justify-content-between align-items-center">
             <h3 class="mb-0 fs-5 ff-vb">سبد خرید</h3>
-            <span class="badge bg-primary" id="cart-items-count">0 محصول</span>
+            <span class="badge bg-primary">{{ cart|length }} محصول</span>
         </div>
         <!-- Card header END -->
 
         <!-- Card body START -->
         <div class="card-body">
-            <!-- Cart Items Container -->
-            <div id="cart-container">
-                <!-- Loading spinner -->
-                <div class="loading-spinner text-center p-4">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">در حال بارگذاری...</span>
-                    </div>
-                </div>
-
-                <!-- Empty cart message -->
-                <div class="empty-cart d-none" id="empty-cart-message">
-                    <i class="fas fa-shopping-cart fa-3x mb-3"></i>
-                    <h4 class="mb-3">سبد خرید شما خالی است</h4>
-                    <p class="mb-4">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
-                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
-                        <i class="fas fa-plus me-2"></i>مشاهده محصولات
-                    </a>
-                </div>
-
-                <!-- Cart items table -->
-                <div class="table-responsive border-0 d-none" id="cart-table">
-                    <table class="table table-hover align-middle mb-0">
+            {% if cart|length > 0 %}
+                <!-- Cart Items Table -->
+                <div class="table-responsive border-0">
+                    <table class="table cart-table align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th scope="col" class="border-0 rounded-start">محصول</th>
@@ -110,401 +67,115 @@
                                 <th scope="col" class="border-0 text-center rounded-end">عملیات</th>
                             </tr>
                         </thead>
-                        <tbody id="cart-items-tbody">
-                            <!-- Cart items will be populated by JavaScript -->
+                        <tbody>
+                            {% for item in cart %}
+                            <tr>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        {% if item.product.image %}
+                                            <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" class="cart-item-image me-3">
+                                        {% else %}
+                                            <div class="cart-item-image me-3 bg-light d-flex align-items-center justify-content-center">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="mb-1">{{ item.product.name }}</h6>
+                                            <small class="text-muted">کد: {{ item.product.sku }}</small>
+                                            {% if item.product.has_discount %}
+                                                <span class="badge bg-success ms-2">{{ item.product.discount_percent }}% تخفیف</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="text-center">
+                                    {% if item.product.has_discount %}
+                                        <div class="text-decoration-line-through text-muted small">
+                                            {{ item.product.unit_price|floatformat:0|intcomma }} ریال
+                                        </div>
+                                        <div class="text-success fw-bold">
+                                            {{ item.product.effective_unit_price|floatformat:0|intcomma }} ریال
+                                        </div>
+                                    {% else %}
+                                        <div class="fw-bold">
+                                            {{ item.price|intcomma }} ریال
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <span class="quantity-display">{{ item.quantity }}</span>
+                                    <br>
+                                    <small class="text-muted">موجودی: {{ item.product.quantity }}</small>
+                                </td>
+                                <td class="text-center">
+                                    {% if item.product.has_discount %}
+                                        <div class="text-decoration-line-through text-muted small">
+                                            {{ item.product.unit_price|floatformat:0|mul:item.quantity|intcomma }} ریال
+                                        </div>
+                                        <div class="text-success fw-bold">
+                                            {{ item.product.effective_unit_price|floatformat:0|mul:item.quantity|intcomma }} ریال
+                                        </div>
+                                    {% else %}
+                                        <div class="fw-bold">
+                                            {{ item.total_price|intcomma }} ریال
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'orders:cart_remove' item.product.id %}" 
+                                       class="btn btn-outline-danger btn-sm remove-btn"
+                                       onclick="return confirm('آیا از حذف {{ item.product.name }} از سبد خرید مطمئن هستید؟')"
+                                       title="حذف از سبد">
+                                        <i class="fas fa-trash"></i> حذف
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>
-            </div>
+
+                <!-- Cart Summary -->
+                <div class="cart-summary">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="mb-3">خلاصه سفارش</h5>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>تعداد اقلام:</span>
+                                <span>{{ cart|length }} محصول</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>جمع کل:</span>
+                                <span class="fw-bold text-success">{{ cart.get_total_price|intcomma }} ریال</span>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-center">
+                            <div class="d-grid w-100 gap-2">
+                                <a href="{% url 'orders:order_create' %}" class="btn btn-success btn-lg">
+                                    <i class="fas fa-shopping-cart me-2"></i>تایید و ادامه
+                                </a>
+                                <a href="{% url 'products:product_list' %}" class="btn btn-outline-primary">
+                                    <i class="fas fa-arrow-right me-2"></i>ادامه خرید
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            {% else %}
+                <!-- Empty Cart -->
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart fa-3x mb-3 text-muted"></i>
+                    <h4 class="mb-3">سبد خرید شما خالی است</h4>
+                    <p class="mb-4 text-muted">محصولات مورد نظر خود را به سبد خرید اضافه کنید</p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary btn-lg">
+                        <i class="fas fa-plus me-2"></i>مشاهده محصولات
+                    </a>
+                </div>
+            {% endif %}
         </div>
         <!-- Card body END -->
     </div>
     <!-- Cart Card END -->
 </div>
-
-<!-- Sidebar START -->
-<div class="col-xl-3">
-    <!-- Cart Summary Card START -->
-    <div class="cart-summary">
-        <h5 class="mb-3">خلاصه سفارش</h5>
-        
-        <!-- Order summary details -->
-        <div class="mb-3">
-            <div class="d-flex justify-content-between mb-2">
-                <span>جمع کل:</span>
-                <span id="summary-original-total">0 ریال</span>
-            </div>
-            <div class="d-flex justify-content-between mb-2 text-success" id="summary-discount-row" style="display: none !important;">
-                <span>تخفیف:</span>
-                <span id="summary-discount">0 ریال</span>
-            </div>
-            <hr>
-            <div class="d-flex justify-content-between mb-3">
-                <strong>مبلغ قابل پرداخت:</strong>
-                <strong class="text-primary" id="summary-final-total">0 ریال</strong>
-            </div>
-        </div>
-
-        <!-- Order actions -->
-        <div class="d-grid gap-2">
-            <button type="button" class="btn btn-primary" id="create-order-btn" disabled>
-                <i class="fas fa-shopping-cart me-2"></i>تایید و ادامه
-            </button>
-            <button type="button" class="btn btn-outline-danger" id="clear-cart-btn" disabled>
-                <i class="fas fa-trash me-2"></i>پاک کردن سبد
-            </button>
-        </div>
-
-        <!-- Security badges -->
-        <div class="text-center mt-3">
-            <small class="text-muted d-block mb-2">خرید امن با</small>
-            <div class="d-flex justify-content-center gap-2">
-                <span class="badge bg-success">SSL</span>
-                <span class="badge bg-info">زرین پال</span>
-            </div>
-        </div>
-    </div>
-    <!-- Cart Summary Card END -->
-</div>
-<!-- Sidebar END -->
-{% endblock %}
-
-{% block extra_js %}
-<script>
-class CartManager {
-    constructor() {
-        this.cartContainer = document.getElementById('cart-container');
-        this.cartTable = document.getElementById('cart-table');
-        this.emptyCart = document.getElementById('empty-cart-message');
-        this.loadingSpinner = document.querySelector('.loading-spinner');
-        this.cartItemsCount = document.getElementById('cart-items-count');
-        this.cartItemsTbody = document.getElementById('cart-items-tbody');
-        
-        // Summary elements
-        this.summaryOriginalTotal = document.getElementById('summary-original-total');
-        this.summaryDiscount = document.getElementById('summary-discount');
-        this.summaryDiscountRow = document.getElementById('summary-discount-row');
-        this.summaryFinalTotal = document.getElementById('summary-final-total');
-        this.createOrderBtn = document.getElementById('create-order-btn');
-        this.clearCartBtn = document.getElementById('clear-cart-btn');
-        
-        this.init();
-    }
-    
-    init() {
-        this.loadCart();
-        this.bindEvents();
-    }
-    
-    bindEvents() {
-        // Create order button
-        this.createOrderBtn.addEventListener('click', () => this.createOrder());
-        
-        // Clear cart button
-        this.clearCartBtn.addEventListener('click', () => this.clearCart());
-    }
-    
-    async loadCart() {
-        this.showLoading();
-        
-        try {
-            const response = await fetch('{% url "orders:cart" %}', {
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.renderCart(data);
-            } else {
-                this.showError('خطا در بارگذاری سبد خرید');
-            }
-        } catch (error) {
-            console.error('Cart loading error:', error);
-            this.showError('خطا در اتصال به سرور');
-        } finally {
-            this.hideLoading();
-        }
-    }
-    
-    renderCart(data) {
-        const hasItems = data.has_items;
-        
-        // Update items count
-        this.cartItemsCount.textContent = `${data.item_count} محصول`;
-        
-        if (hasItems) {
-            this.showCartTable();
-            this.renderCartItems(data.items);
-            this.updateSummary(data.totals);
-            this.enableActions();
-        } else {
-            this.showEmptyCart();
-            this.disableActions();
-        }
-    }
-    
-    renderCartItems(items) {
-        this.cartItemsTbody.innerHTML = '';
-        
-        items.forEach(item => {
-            const row = this.createCartItemRow(item);
-            this.cartItemsTbody.appendChild(row);
-        });
-    }
-    
-    createCartItemRow(item) {
-        const row = document.createElement('tr');
-        row.dataset.productId = item.product_id;
-        
-        // Format prices
-        const unitPrice = this.formatPrice(item.unit_price);
-        const effectivePrice = this.formatPrice(item.effective_unit_price);
-        const lineTotal = this.formatPrice(item.effective_line_total);
-        const originalLineTotal = this.formatPrice(item.original_line_total);
-        
-        row.innerHTML = `
-            <td>
-                <div class="d-flex align-items-center">
-                    ${item.product_image ? `<img src="${item.product_image}" alt="${item.product_name}" class="cart-item-image me-3">` : '<div class="cart-item-image me-3 bg-light d-flex align-items-center justify-content-center"><i class="fas fa-image text-muted"></i></div>'}
-                    <div>
-                        <h6 class="mb-1">${item.product_name}</h6>
-                        <small class="text-muted">کد: ${item.sku}</small>
-                        ${item.has_discount ? `<span class="badge bg-success discount-badge ms-2">${item.discount_percent}% تخفیف</span>` : ''}
-                        ${!item.is_available ? '<span class="badge bg-danger ms-2">ناموجود</span>' : ''}
-                        ${item.low_stock ? '<span class="badge bg-warning ms-2">موجودی کم</span>' : ''}
-                    </div>
-                </div>
-            </td>
-            <td class="text-center">
-                ${item.has_discount ? `<div class="price-original">${unitPrice}</div>` : ''}
-                <div class="price-effective">${effectivePrice}</div>
-            </td>
-            <td class="text-center">
-                <div class="quantity-controls">
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-quantity" onclick="cartManager.updateQuantity(${item.product_id}, ${item.quantity - 1})">
-                        <i class="fas fa-minus"></i>
-                    </button>
-                    <input type="number" class="form-control form-control-sm quantity-input" 
-                           value="${item.quantity}" min="1" max="${item.available_quantity}"
-                           onchange="cartManager.updateQuantity(${item.product_id}, this.value)">
-                    <button type="button" class="btn btn-outline-secondary btn-sm btn-quantity" 
-                            onclick="cartManager.updateQuantity(${item.product_id}, ${item.quantity + 1})" 
-                            ${item.quantity >= item.available_quantity ? 'disabled' : ''}>
-                        <i class="fas fa-plus"></i>
-                    </button>
-                </div>
-                <small class="text-muted d-block mt-1">موجودی: ${item.available_quantity}</small>
-            </td>
-            <td class="text-center">
-                ${item.has_discount && item.line_savings > 0 ? `<div class="price-original">${originalLineTotal}</div>` : ''}
-                <div class="price-effective">${lineTotal}</div>
-            </td>
-            <td class="text-center">
-                <button type="button" class="btn btn-outline-danger btn-sm" 
-                        onclick="cartManager.removeItem(${item.product_id})" 
-                        title="حذف از سبد">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </td>
-        `;
-        
-        return row;
-    }
-    
-    async updateQuantity(productId, newQuantity) {
-        if (newQuantity < 1) {
-            this.removeItem(productId);
-            return;
-        }
-        
-        try {
-            const formData = new FormData();
-            formData.append('action', 'update');
-            formData.append('quantity', newQuantity);
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
-            const response = await fetch(`{% url "orders:cart_operation" 0 %}`.replace('0', productId), {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.loadCart(); // Refresh cart
-                this.showMessage(data.message, 'success');
-                // Dispatch cart update event for header
-                if (window.dispatchCartUpdate) {
-                    window.dispatchCartUpdate();
-                }
-            } else {
-                this.showMessage(data.error, 'error');
-            }
-        } catch (error) {
-            console.error('Update quantity error:', error);
-            this.showMessage('خطا در به‌روزرسانی تعداد', 'error');
-        }
-    }
-    
-    async removeItem(productId) {
-        if (!confirm('آیا از حذف این محصول مطمئن هستید؟')) return;
-        
-        try {
-            const formData = new FormData();
-            formData.append('action', 'remove');
-            formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
-            
-            const response = await fetch(`{% url "orders:cart_operation" 0 %}`.replace('0', productId), {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.loadCart(); // Refresh cart
-                this.showMessage(data.message, 'success');
-                // Dispatch cart update event for header
-                if (window.dispatchCartUpdate) {
-                    window.dispatchCartUpdate();
-                }
-            } else {
-                this.showMessage(data.error, 'error');
-            }
-        } catch (error) {
-            console.error('Remove item error:', error);
-            this.showMessage('خطا در حذف محصول', 'error');
-        }
-    }
-    
-    async createOrder() {
-        if (!confirm('آیا از ایجاد سفارش مطمئن هستید؟')) return;
-        
-        this.createOrderBtn.disabled = true;
-        this.createOrderBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال پردازش...';
-        
-        try {
-            const response = await fetch('{% url "orders:order_create" %}', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-            
-            const data = await response.json();
-            
-            if (data.success) {
-                this.showMessage(data.message, 'success');
-                // Redirect to order detail page
-                setTimeout(() => {
-                    window.location.href = data.redirect_url;
-                }, 1500);
-            } else {
-                this.showMessage(data.error, 'error');
-                this.createOrderBtn.disabled = false;
-                this.createOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>تایید و ادامه';
-            }
-        } catch (error) {
-            console.error('Create order error:', error);
-            this.showMessage('خطا در ایجاد سفارش', 'error');
-            this.createOrderBtn.disabled = false;
-            this.createOrderBtn.innerHTML = '<i class="fas fa-shopping-cart me-2"></i>تایید و ادامه';
-        }
-    }
-    
-    async clearCart() {
-        if (!confirm('آیا از پاک کردن تمام محصولات سبد خرید مطمئن هستید؟')) return;
-        
-        // You'll need to implement a clear cart endpoint or remove all items one by one
-        this.showMessage('قابلیت پاک کردن سبد در حال توسعه است', 'info');
-    }
-    
-    updateSummary(totals) {
-        this.summaryOriginalTotal.textContent = this.formatPrice(totals.original_total);
-        this.summaryFinalTotal.textContent = this.formatPrice(totals.effective_total);
-        
-        if (totals.total_savings > 0) {
-            this.summaryDiscount.textContent = this.formatPrice(totals.total_savings);
-            this.summaryDiscountRow.style.display = 'flex';
-        } else {
-            this.summaryDiscountRow.style.display = 'none';
-        }
-    }
-    
-    formatPrice(price) {
-        return new Intl.NumberFormat('fa-IR').format(Math.round(price)) + ' ریال';
-    }
-    
-    showCartTable() {
-        this.cartTable.classList.remove('d-none');
-        this.emptyCart.classList.add('d-none');
-    }
-    
-    showEmptyCart() {
-        this.cartTable.classList.add('d-none');
-        this.emptyCart.classList.remove('d-none');
-    }
-    
-    showLoading() {
-        this.loadingSpinner.style.display = 'block';
-    }
-    
-    hideLoading() {
-        this.loadingSpinner.style.display = 'none';
-    }
-    
-    enableActions() {
-        this.createOrderBtn.disabled = false;
-        this.clearCartBtn.disabled = false;
-    }
-    
-    disableActions() {
-        this.createOrderBtn.disabled = true;
-        this.clearCartBtn.disabled = true;
-    }
-    
-    showMessage(message, type = 'info') {
-        // Create toast notification
-        const toast = document.createElement('div');
-        toast.className = `alert alert-${type === 'success' ? 'success' : type === 'error' ? 'danger' : 'info'} toast`;
-        toast.innerHTML = `
-            <div class="d-flex align-items-center">
-                <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'info-circle'} me-2"></i>
-                ${message}
-                <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
-            </div>
-        `;
-        
-        document.body.appendChild(toast);
-        
-        // Auto remove after 5 seconds
-        setTimeout(() => {
-            if (toast.parentElement) {
-                toast.remove();
-            }
-        }, 5000);
-    }
-    
-    showError(message) {
-        this.showMessage(message, 'error');
-    }
-}
-
-// Initialize cart manager when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    window.cartManager = new CartManager();
-});
-</script>
-
-<!-- CSRF Token for AJAX requests -->
-{% csrf_token %}
 {% endblock %}
