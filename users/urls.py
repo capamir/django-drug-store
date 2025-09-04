@@ -12,7 +12,7 @@ urlpatterns = [
 
     # AJAX endpoint for OTP resend
     path('resend-otp/', views.ResendOTPView.as_view(), name='resend_otp'),
-
+    path('logout/', views.UserLogoutView.as_view(), name='logout'),
     # Dashboard URLs
     path('dashboard/', views.UserDashboardView.as_view(), name='user_dashboard'),
 ]

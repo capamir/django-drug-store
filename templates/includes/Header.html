@@ -1,276 +1,400 @@
 {% load static %}
+
 <!-- Header START -->
-<header class="navbar-light header-static navbar-sticky">
-  <!-- Nav START -->
-  <nav class="navbar navbar-expand-xl">
-    <div class="container">
-      <!-- Logo START -->
-      <a class="navbar-brand me-0" href="{% url 'products:home' %}">
-        <img 
-          class="light-mode-item navbar-brand-item" 
-          src="{% static 'assets/images/logo.svg' %}" 
-          alt="داروخانه آنلاین" 
-        />
-        <img 
-          class="dark-mode-item navbar-brand-item" 
-          src="{% static 'assets/images/logo-light.svg' %}" 
-          alt="داروخانه آنلاین" 
-        />
-      </a>
-      <!-- Logo END -->
-
-      <!-- Responsive navbar toggler -->
-      <button 
-        class="navbar-toggler ms-auto" 
-        type="button" 
-        data-bs-toggle="collapse" 
-        data-bs-target="#navbarCollapse" 
-        aria-controls="navbarCollapse" 
-        aria-expanded="false" 
-        aria-label="Toggle navigation"
-      >
-        <span class="navbar-toggler-animation">
-          <span></span>
-          <span></span>
-          <span></span>
-        </span>
-      </button>
-
-      <!-- Main navbar START -->
-      <div class="navbar-collapse collapse" id="navbarCollapse">
-        <ul class="navbar-nav navbar-nav-scroll mx-auto">
-          <!-- Nav items -->
-          <li class="nav-item">
-            <a class="nav-link" href="{% url 'products:home' %}">صفحه اصلی</a>
-          </li>
-          <li class="nav-item dropdown">
-            <a 
-              class="nav-link dropdown-toggle" 
-              href="#" 
-              id="productsMenu" 
-              data-bs-toggle="dropdown" 
-              aria-haspopup="true" 
-              aria-expanded="false"
-            >
-              محصولات
+<header class="navbar-light navbar-sticky header-static">
+    <!-- Logo Nav START -->
+    <nav class="navbar navbar-expand-xl">
+        <div class="container-fluid px-3 px-xl-5">
+            <!-- Logo START -->
+            <a class="navbar-brand" href="/">
+                <img class="light-mode-item navbar-brand-item" src="{% static 'assets/images/logo.svg' %}" alt="logo">
+                <img class="dark-mode-item navbar-brand-item" src="{% static 'assets/images/logo-light.svg' %}" alt="logo">
             </a>
-            <ul class="dropdown-menu" aria-labelledby="productsMenu">
-              <li><a class="dropdown-item" href="#">همه محصولات</a></li>
-              <li><a class="dropdown-item" href="#">داروهای بدون نسخه</a></li>
-              <li><a class="dropdown-item" href="#">مکمل‌ها</a></li>
-              <li><a class="dropdown-item" href="#">محصولات بهداشتی</a></li>
-              <li><a class="dropdown-item" href="#">تجهیزات پزشکی</a></li>
-            </ul>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">دسته‌بندی‌ها</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">درباره ما</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="#">تماس با ما</a>
-          </li>
-        </ul>
-      </div>
-      <!-- Main navbar END -->
+            <!-- Logo END -->
 
-      <!-- Nav Search START -->
-      <div class="nav nav-item dropdown nav-search px-1 px-lg-3">
-        <a 
-          class="nav-link" 
-          role="button" 
-          href="#" 
-          id="navSearch" 
-          data-bs-toggle="dropdown" 
-          aria-expanded="false" 
-          data-bs-auto-close="outside" 
-          data-bs-display="static"
-        >
-          <i class="bi bi-search fs-4"></i>
-        </a>
-        <div 
-          class="dropdown-menu dropdown-menu-end shadow rounded p-2" 
-          aria-labelledby="navSearch" 
-          data-bs-popper="none"
-        >
-          <form class="input-group" method="get" action="#">
-            <input 
-              class="form-control border-primary" 
-              type="search" 
-              placeholder="جستجوی محصولات..." 
-              aria-label="Search" 
-              name="q"
-            />
-            <button class="btn btn-primary m-0" type="submit">جستجو</button>
-          </form>
+            <!-- Responsive navbar toggler -->
+            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-animation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
 
-          <!-- Recent search -->
-          <ul class="list-group list-group-borderless p-2 small">
-            <li class="list-group-item d-flex justify-content-between align-items-center">
-              <span class="fw-bold">جستجوهای اخیر</span>
-              <button class="btn btn-sm btn-link mb-0 px-0">حذف همه</button>
-            </li>
-            <li class="list-group-item text-primary-hover text-truncate">
-              <a href="#" class="text-body">
-                <i class="far fa-clock me-1"></i>قرص سردرد
-              </a>
-            </li>
-            <li class="list-group-item text-primary-hover text-truncate">
-              <a href="#" class="text-body">
-                <i class="far fa-clock me-1"></i>ویتامین D
-              </a>
-            </li>
-            <li class="list-group-item text-primary-hover text-truncate">
-              <a href="#" class="text-body">
-                <i class="far fa-clock me-1"></i>کرم آفتاب
-              </a>
-            </li>
-          </ul>
+            <!-- Main navbar START -->
+            <div class="navbar-collapse w-100 collapse" id="navbarCollapse">
+                <!-- Nav category menu START -->
+                <ul class="navbar-nav navbar-nav-scroll me-auto">
+                    <!-- Nav item: Categories -->
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="categoryMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">دسته‌بندی‌ها</a>
+                        <ul class="dropdown-menu" aria-labelledby="categoryMenu">
+                            {% for category in categories %}
+                            <li><a class="dropdown-item" href="{% url 'products:category_products' category.slug %}">{{ category.name }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </li>
+                    
+                    <!-- Nav item: Products -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'products:product_list' %}">محصولات</a>
+                    </li>
+                    
+                    <!-- Nav item: About -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">درباره ما</a>
+                    </li>
+                    
+                    <!-- Nav item: Contact -->
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">تماس با ما</a>
+                    </li>
+                </ul>
+                <!-- Nav category menu END -->
+
+                <!-- Nav Search START -->
+                <div class="nav my-3 my-xl-0 px-4 flex-nowrap align-items-center">
+                    <div class="nav-item w-100">
+                        <form class="position-relative" method="GET" action="{% url 'products:product_list' %}">
+                            <input class="form-control pe-5 bg-transparent" type="search" name="search" placeholder="جستجوی محصولات..." aria-label="Search" value="{{ request.GET.search }}">
+                            <button class="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset" type="submit">
+                                <i class="fas fa-search fs-6"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- Nav Search END -->
+
+                <!-- Profile and Cart START -->
+                <div class="navbar-nav ms-auto">
+                    
+                    <!-- Shopping Cart START -->
+                    <div class="nav-item dropdown ms-0 ms-md-3">
+                        <a class="nav-link position-relative" href="#" id="cartDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-shopping-cart fa-fw"></i>
+                            <!-- Cart Badge -->
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-badge" style="display: none;">
+                                0
+                            </span>
+                        </a>
+                        
+                        <!-- Cart dropdown START -->
+                        <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="cartDropdown" id="cart-dropdown">
+                            <div class="card bg-transparent border-0">
+                                <!-- Card header -->
+                                <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">سبد خرید</h6>
+                                    <span class="badge bg-primary" id="cart-items-count-header">0 محصول</span>
+                                </div>
+                                
+                                <!-- Card body -->
+                                <div class="card-body p-0">
+                                    <!-- Empty cart message -->
+                                    <div class="text-center p-4" id="empty-cart-message">
+                                        <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                        <p class="mb-0 text-muted">سبد خرید شما خالی است</p>
+                                    </div>
+                                    
+                                    <!-- Cart items container -->
+                                    <div class="list-group list-group-flush" id="cart-items-container" style="max-height: 300px; overflow-y: auto;">
+                                        <!-- Cart items will be populated by JavaScript -->
+                                    </div>
+                                    
+                                    <!-- Loading spinner -->
+                                    <div class="text-center p-3 d-none" id="cart-loading">
+                                        <div class="spinner-border spinner-border-sm" role="status">
+                                            <span class="visually-hidden">در حال بارگذاری...</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Card footer -->
+                                <div class="card-footer bg-light d-none" id="cart-footer">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <span class="fw-bold">جمع کل:</span>
+                                        <span class="fw-bold text-success" id="cart-total-price">0 ریال</span>
+                                    </div>
+                                    <div class="d-grid gap-2">
+                                        <a href="{% url 'orders:cart' %}" class="btn btn-primary btn-sm">
+                                            <i class="fas fa-eye me-1"></i>مشاهده سبد خرید
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Cart dropdown END -->
+                    </div>
+                    <!-- Shopping Cart END -->
+
+                    <!-- Profile dropdown START -->
+                    {% if user.is_authenticated %}
+                    <div class="nav-item dropdown ms-2">
+                        <a class="nav-link" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle fa-fw"></i>
+                        </a>
+                        <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
+                            <!-- Profile info -->
+                            <li class="px-3 mb-3">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar avatar-sm me-3">
+                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0">
+                                            {% if user.get_full_name %}
+                                                {{ user.get_full_name }}
+                                            {% elif user.first_name %}
+                                                {{ user.first_name }} {{ user.last_name|default:"" }}
+                                            {% elif user.phone_number %}
+                                                {{ user.phone_number }}
+                                            {% else %}
+                                                {{ user }}
+                                            {% endif %}
+                                        </h6>
+                                        <p class="small mb-0">
+                                            {% if user.email %}
+                                                {{ user.email }}
+                                            {% elif user.phone_number %}
+                                                {{ user.phone_number }}
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                            </li>
+                            <!-- Links -->
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'users:user_dashboard' %}"><i class="fas fa-user fa-fw me-2"></i>پروفایل من</a></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:cart' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="fas fa-list fa-fw me-2"></i>سفارشات من</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i>خروج</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <!-- Login/Register buttons for non-authenticated users -->
+                    <div class="nav-item ms-2">
+                        <a href="{% url 'users:phone_entry' %}" class="btn btn-outline-primary btn-sm me-2">ورود</a>
+                        <a href="{% url 'users:phone_entry' %}" class="btn btn-primary btn-sm">ثبت نام</a>
+                    </div>
+                    {% endif %}
+                    <!-- Profile dropdown END -->
+                </div>
+                <!-- Profile and Cart END -->
+            </div>
+            <!-- Main navbar END -->
         </div>
-      </div>
-      <!-- Nav Search END -->
-
-      <!-- Profile START -->
-      {% if user.is_authenticated %}
-      <div class="dropdown ms-1 ms-lg-0">
-        <a 
-          class="avatar avatar-sm p-0" 
-          href="#" 
-          id="profileDropdown" 
-          role="button" 
-          data-bs-auto-close="outside" 
-          data-bs-display="static" 
-          data-bs-toggle="dropdown" 
-          aria-expanded="false"
-        >
-          {% if user.profile_image %}
-            <img 
-              class="avatar-img rounded-circle" 
-              src="{{ user.profile_image.url }}" 
-              alt="{{ user.get_full_name }}"
-            />
-          {% else %}
-            <img 
-              class="avatar-img rounded-circle" 
-              src="{% static 'assets/images/avatar/default-user.jpg' %}" 
-              alt="{{ user.get_full_name }}"
-            />
-          {% endif %}
-        </a>
-        <ul 
-          class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" 
-          aria-labelledby="profileDropdown"
-        >
-          <!-- Profile info -->
-          <li class="px-3 mb-3">
-            <div class="d-flex align-items-center">
-              <!-- Avatar -->
-              <div class="avatar me-3">
-                {% if user.profile_image %}
-                  <img 
-                    class="avatar-img rounded-circle shadow" 
-                    src="{{ user.profile_image.url }}" 
-                    alt="{{ user.get_full_name }}"
-                  />
-                {% else %}
-                  <img 
-                    class="avatar-img rounded-circle shadow" 
-                    src="{% static 'assets/images/avatar/default-user.jpg' %}" 
-                    alt="{{ user.get_full_name }}"
-                  />
-                {% endif %}
-              </div>
-              <div>
-                <a class="h6" href="#">{{ user.get_full_name }}</a>
-                <p class="small m-0">{{ user.phone_number }}</p>
-              </div>
-            </div>
-          </li>
-          <li><hr class="dropdown-divider" /></li>
-          
-          <!-- Links -->
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-house-door fa-fw me-2"></i>داشبورد
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-person fa-fw me-2"></i>ویرایش پروفایل
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-basket fa-fw me-2"></i>سفارشات من
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-geo-alt fa-fw me-2"></i>آدرس‌های من
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-heart fa-fw me-2"></i>علاقه‌مندی‌ها
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-gear fa-fw me-2"></i>تنظیمات
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item" href="#">
-              <i class="bi bi-headset fa-fw me-2"></i>پشتیبانی
-            </a>
-          </li>
-          <li>
-            <a class="dropdown-item bg-danger-soft-hover" href="#">
-              <i class="bi bi-power fa-fw me-2"></i>خروج
-            </a>
-          </li>
-          
-          <li><hr class="dropdown-divider" /></li>
-          
-          <!-- Dark mode options START -->
-          <li>
-            <div class="bg-light dark-mode-switch theme-icon-active d-flex align-items-center p-1 rounded mt-2">
-              <button type="button" class="btn btn-sm mb-0" data-bs-theme-value="light">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sun fa-fw mode-switch" viewBox="0 0 16 16">
-                  <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
-                </svg>
-                روشن
-              </button>
-              <button type="button" class="btn btn-sm mb-0" data-bs-theme-value="dark">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-moon-stars fa-fw mode-switch" viewBox="0 0 16 16">
-                  <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278zM4.858 1.311A7.269 7.269 0 0 0 1.025 7.71c0 4.02 3.279 7.276 7.319 7.276a7.316 7.316 0 0 0 5.205-2.162c-.337.042-.68.063-1.029.063-4.61 0-8.343-3.714-8.343-8.29 0-1.167.242-2.278.681-3.286z"/>
-                  <path d="M10.794 3.148a.217.217 0 0 1 .412 0l.387 1.162c.173.518.579.924 1.097 1.097l1.162.387a.217.217 0 0 1 0 .412l-1.162.387a1.734 1.734 0 0 0-1.097 1.097l-.387 1.162a.217.217 0 0 1-.412 0l-.387-1.162A1.734 1.734 0 0 0 9.31 6.593l-1.162-.387a.217.217 0 0 1 0-.412l1.162-.387a1.734 1.734 0 0 0 1.097-1.097l.387-1.162zM13.863.099a.145.145 0 0 1 .274 0l.258.774c.115.346.386.617.732.732l.774.258a.145.145 0 0 1 0 .274l-.774.258a1.156 1.156 0 0 0-.732.732l-.258.774a.145.145 0 0 1-.274 0l-.258-.774a1.156 1.156 0 0 0-.732-.732l-.774-.258a.145.145 0 0 1 0-.274l.774-.258c.346-.115.617-.386.732-.732L13.863.1z"/>
-                </svg>
-                تیره
-              </button>
-              <button type="button" class="btn btn-sm mb-0 active" data-bs-theme-value="auto">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-circle-half fa-fw mode-switch" viewBox="0 0 16 16">
-                  <path d="M8 15A7 7 0 1 0 8 1v14zm0 1A8 8 0 1 1 8 0a8 8 0 0 1 0 16z"/>
-                </svg>
-                خودکار
-              </button>
-            </div>
-          </li>
-          <!-- Dark mode options END-->
-        </ul>
-      </div>
-      {% else %}
-      <!-- Login/Register Button -->
-      <div class="ms-1 ms-lg-0">
-        <a href="{% url 'users:phone_entry' %}" class="btn btn-primary">
-          <i class="bi bi-person-plus me-2"></i>ورود / ثبت نام
-        </a>
-      </div>
-      {% endif %}
-      <!-- Profile END -->
-    </div>
-  </nav>
-  <!-- Logo Nav END -->
+    </nav>
+    <!-- Logo Nav END -->
 </header>
 <!-- Header END -->
+
+<!-- Cart Styles and Scripts -->
+<style>
+.cart-item-mini {
+    border: none !important;
+    padding: 8px 12px;
+}
+
+.cart-item-mini:hover {
+    background-color: #f8f9fa;
+}
+
+.cart-item-image-mini {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.cart-item-details h6 {
+    font-size: 0.875rem;
+    margin-bottom: 0;
+}
+
+.cart-item-price {
+    font-size: 0.75rem;
+    color: #28a745;
+    font-weight: 600;
+}
+
+.cart-item-quantity {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
+
+#cart-badge {
+    font-size: 0.6rem;
+    min-width: 18px;
+    height: 18px;
+    line-height: 18px;
+}
+
+.dropdown-menu-size-md {
+    min-width: 320px;
+}
+
+@media (max-width: 576px) {
+    .dropdown-menu-size-md {
+        min-width: 280px;
+    }
+}
+</style>
+
+<script>
+class HeaderCartManager {
+    constructor() {
+        this.cartBadge = document.getElementById('cart-badge');
+        this.cartItemsCount = document.getElementById('cart-items-count-header');
+        this.emptyCartMessage = document.getElementById('empty-cart-message');
+        this.cartItemsContainer = document.getElementById('cart-items-container');
+        this.cartFooter = document.getElementById('cart-footer');
+        this.cartTotalPrice = document.getElementById('cart-total-price');
+        this.cartLoading = document.getElementById('cart-loading');
+        
+        this.init();
+    }
+    
+    init() {
+        this.loadCartSummary();
+        
+        // Refresh cart on dropdown show
+        const cartDropdown = document.getElementById('cartDropdown');
+        if (cartDropdown) {
+            cartDropdown.addEventListener('shown.bs.dropdown', () => {
+                this.loadCartSummary();
+            });
+        }
+        
+        // Listen to cart update events from other pages
+        window.addEventListener('cartUpdated', () => {
+            this.loadCartSummary();
+        });
+    }
+    
+    async loadCartSummary() {
+        this.showLoading();
+        
+        try {
+            const response = await fetch('{% url "orders:cart" %}', {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                this.updateCartDisplay(data);
+            }
+        } catch (error) {
+            console.error('Cart loading error:', error);
+        } finally {
+            this.hideLoading();
+        }
+    }
+    
+    updateCartDisplay(data) {
+        const hasItems = data.has_items;
+        const itemCount = data.count;
+        
+        // Update badge
+        if (hasItems) {
+            this.cartBadge.textContent = itemCount;
+            this.cartBadge.style.display = 'block';
+        } else {
+            this.cartBadge.style.display = 'none';
+        }
+        
+        // Update header count
+        this.cartItemsCount.textContent = `${data.item_count} محصول`;
+        
+        if (hasItems) {
+            this.showCartItems(data.items, data.totals);
+        } else {
+            this.showEmptyCart();
+        }
+    }
+    
+    showCartItems(items, totals) {
+        // Hide empty message, show footer
+        this.emptyCartMessage.style.display = 'none';
+        this.cartFooter.classList.remove('d-none');
+        
+        // Clear and populate items
+        this.cartItemsContainer.innerHTML = '';
+        
+        // Limit to 5 items for dropdown display
+        const displayItems = items.slice(0, 5);
+        
+        displayItems.forEach(item => {
+            const itemElement = this.createCartItemElement(item);
+            this.cartItemsContainer.appendChild(itemElement);
+        });
+        
+        // Show "see more" if more than 5 items
+        if (items.length > 5) {
+            const moreElement = document.createElement('div');
+            moreElement.className = 'list-group-item text-center cart-item-mini';
+            moreElement.innerHTML = `<small class="text-muted">و ${items.length - 5} محصول دیگر...</small>`;
+            this.cartItemsContainer.appendChild(moreElement);
+        }
+        
+        // Update total price
+        this.cartTotalPrice.textContent = this.formatPrice(totals.effective_total);
+    }
+    
+    createCartItemElement(item) {
+        const element = document.createElement('div');
+        element.className = 'list-group-item cart-item-mini';
+        
+        element.innerHTML = `
+            <div class="d-flex align-items-center">
+                <div class="me-2">
+                    ${item.product_image 
+                        ? `<img src="${item.product_image}" alt="${item.product_name}" class="cart-item-image-mini">` 
+                        : `<div class="cart-item-image-mini bg-light d-flex align-items-center justify-content-center"><i class="fas fa-image text-muted"></i></div>`
+                    }
+                </div>
+                <div class="flex-grow-1 cart-item-details">
+                    <h6 class="text-truncate" style="max-width: 180px;" title="${item.product_name}">${item.product_name}</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="cart-item-quantity">${item.quantity} عدد</span>
+                        <span class="cart-item-price">${this.formatPrice(item.effective_line_total)}</span>
+                    </div>
+                    ${item.has_discount ? '<span class="badge bg-success badge-sm">تخفیف‌دار</span>' : ''}
+                </div>
+            </div>
+        `;
+        
+        return element;
+    }
+    
+    showEmptyCart() {
+        this.emptyCartMessage.style.display = 'block';
+        this.cartFooter.classList.add('d-none');
+        this.cartItemsContainer.innerHTML = '';
+    }
+    
+    showLoading() {
+        this.cartLoading.classList.remove('d-none');
+    }
+    
+    hideLoading() {
+        this.cartLoading.classList.add('d-none');
+    }
+    
+    formatPrice(price) {
+        return new Intl.NumberFormat('fa-IR').format(Math.round(price)) + ' ریال';
+    }
+}
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    window.headerCartManager = new HeaderCartManager();
+});
+
+// Cart update event dispatcher (to be called from other pages when cart is modified)
+window.dispatchCartUpdate = function() {
+    window.dispatchEvent(new CustomEvent('cartUpdated'));
+};
+</script>

@@ -1,5 +1,5 @@
 # Import all views to keep URLs clean
-from .auth import PhoneEntryView, OTPVerificationView, ResendOTPView, UserRegistrationView
+from .auth import PhoneEntryView, OTPVerificationView, ResendOTPView, UserRegistrationView, UserLogoutView
 from .dashboard import UserDashboardView
 
 __all__ = [
@@ -8,6 +8,7 @@ __all__ = [
     'OTPVerificationView', 
     'ResendOTPView',
     'UserRegistrationView',
+    'UserLogoutView',
     # dashboard
     'UserDashboardView',
 ]

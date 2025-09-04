@@ -3,10 +3,11 @@ from django.views.generic import FormView
 from django.contrib import messages
 from django.urls import reverse_lazy
 from django.utils import timezone
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.http import JsonResponse
 from datetime import timedelta
-
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views import View
 from users.forms import PhoneNumberForm, OTPVerificationForm, UserRegistrationForm
 from users.models import User, OTPVerification
 
@@ -427,3 +428,10 @@ class UserRegistrationView(FormView):
         })
         
         return context
+
+
+class UserLogoutView(LoginRequiredMixin, View):
+    def get(self, request):
+        logout(request)
+        messages.success(request, 'شما با موفقیت خارج شدید', 'success')
+        return redirect('products:home')  # Changed from 'home:home' to 'products:home'
