@@ -48,7 +48,7 @@ class Product(models.Model):
     )
     image = models.ImageField(
         upload_to='product_images/', 
-        default='static/assets/images/default.jpg',
+        default='assets/images/default.jpg',
         blank=True, 
         null=True, 
         help_text='تصویر محصول'

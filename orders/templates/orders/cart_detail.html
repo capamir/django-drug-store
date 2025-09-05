@@ -113,11 +113,15 @@
 
                                 <!-- Actions -->
                                 <td class="text-center">
-                                    <button class="btn btn-sm btn-outline-danger remove-item" 
-                                            data-item-id="{{ item.id }}"
-                                            title="حذف از سبد خرید">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <form method="post" action="{% url 'orders:remove_cart_item' item.id %}" class="d-inline">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-outline-danger btn-sm"
+                                                onclick="return confirm('آیا از حذف {{ item.product.name }} از سبد خرید مطمئن هستید؟')"
+                                                title="حذف از سبد">
+                                            <i class="fas fa-trash"></i> حذف
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% endfor %}

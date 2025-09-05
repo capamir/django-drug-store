@@ -196,3 +196,23 @@ class UpdateCartItemView(LoginRequiredMixin, View):
         )
         
         return redirect('orders:cart_detail')
+
+class RemoveCartItemView(LoginRequiredMixin, View):
+    """Remove item from cart completely"""
+    
+    def post(self, request, item_id):
+        cart_item = get_object_or_404(
+            CartItem,
+            id=item_id,
+            cart__user=request.user
+        )
+        
+        product_name = cart_item.product.name
+        cart_item.delete()
+        
+        messages.success(
+            request,
+            f'"{product_name}" از سبد خرید حذف شد.'
+        )
+        
+        return redirect('orders:cart_detail')
