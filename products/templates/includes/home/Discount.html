@@ -57,7 +57,8 @@ Event START -->
                 <div class="w-100 mt-auto">
                   <!-- Category -->
                   {% if product.category %}
-                    <a href="{% url 'products:category_detail' slug=product.category.slug %}" class="badge text-bg-white fs-6 rounded-1">
+                    {% comment %} <a href="{% url 'products:category_detail' slug=product.category.slug %}" class="badge text-bg-white fs-6 rounded-1"> {% endcomment %}
+                    <a href="" class="badge text-bg-white fs-6 rounded-1">
                       <i class="fas fa-tag text-orange me-2"></i>{{ product.category.name }}
                     </a>
                   {% endif %}
@@ -79,7 +80,7 @@ Event START -->
                   <span class="text-success fw-bold">{{ product.effective_unit_price|floatformat:0 }} ریال</span>
                 </div>
                 
-                <form method="post" action="{% url 'orders:cart_add' product.id %}" class="d-inline">
+                <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="d-inline">
                   {% csrf_token %}
                   <input type="hidden" name="quantity" value="1">
                   <button type="submit" class="btn btn-sm btn-primary-soft mb-0">

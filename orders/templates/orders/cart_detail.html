@@ -173,9 +173,14 @@
                                     <a href="" class="btn btn-primary btn-lg">
                                         ادامه خرید
                                     </a>
-                                    <a href="{% url 'products:product_list' %}" class="btn btn-outline-secondary">
-                                        ادامه خرید
-                                    </a>
+                                    <form method="post" action="{% url 'orders:clear_cart' %}" class="mt-2">
+                                        {% csrf_token %}
+                                        <button type="submit" 
+                                                class="btn btn-outline-secondary btn-sm w-100"
+                                                onclick="return confirm('آیا از خالی کردن سبد خرید مطمئن هستید؟')">
+                                            <i class="fas fa-trash me-2"></i>خالی کردن سبد
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>

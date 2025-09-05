@@ -216,3 +216,22 @@ class RemoveCartItemView(LoginRequiredMixin, View):
         )
         
         return redirect('orders:cart_detail')
+
+class ClearCartView(LoginRequiredMixin, View):
+    """Clear all items from user's cart"""
+    
+    def post(self, request):
+        cart, created = Cart.objects.get_or_create(user=request.user)
+        
+        if cart.items.exists():
+            items_count = cart.items.count()
+            cart.clear()  # Uses the clear() method we defined in the Cart model
+            
+            messages.success(
+                request,
+                f'{items_count} محصول از سبد خرید حذف شد.'
+            )
+        else:
+            messages.info(request, 'سبد خرید شما قبلاً خالی است.')
+        
+        return redirect('orders:cart_detail')
