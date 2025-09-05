@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
     # installed apps
     'users.apps.UsersConfig',
     'products.apps.ProductsConfig',
@@ -65,7 +66,6 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'orders.context_processors.cart',
             ],
         },
     },
@@ -150,3 +150,13 @@ OTP_EXPIRE_MINUTES = 5
 OTP_MAX_ATTEMPTS = 3
 OTP_RATE_LIMIT_MINUTES = 2
 OTP_MAX_REQUESTS_PER_PERIOD = 3
+
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+]
+
+CSRF_COOKIE_SECURE = False  # Set to True in production with HTTPS
+SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
+CSRF_COOKIE_HTTPONLY = True
+SESSION_COOKIE_HTTPONLY = True

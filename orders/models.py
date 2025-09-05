@@ -1,111 +1,156 @@
 # orders/models.py
-from django.db import models, transaction
+from django.db import models
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 from django.utils import timezone
-from django.core.validators import MinValueValidator, MaxValueValidator
-from products.models import Product  # adjust to your app
 
 User = get_user_model()
 
 class Order(models.Model):
-    class Status(models.TextChoices):
-        CART = "cart", "Cart"
-        PENDING = "pending", "Pending"
-        PAID = "paid", "Paid"
-        FAILED = "failed", "Failed"
-        REFUNDED = "refunded", "Refunded"
-        CANCELED = "canceled", "Canceled"
-
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.CART)
-    created = models.DateTimeField(auto_now_add=True)
-    updated = models.DateTimeField(auto_now=True)
-
-    # Monetary amounts in Iranian Rial (store as integers for exact math)
-    subtotal_amount = models.BigIntegerField(default=0)        # sum of line (unit*qty) before discounts
-    discount_amount = models.BigIntegerField(default=0)        # sum of line discounts
-    shipping_amount = models.BigIntegerField(default=0)        # add if needed later
-    payable_amount = models.BigIntegerField(default=0)         # subtotal - discount + shipping
-
-    # Payment tracking (Zarinpal)
-    payment_authority = models.CharField(max_length=64, blank=True)   # Zarinpal Authority
-    payment_ref_id = models.CharField(max_length=64, blank=True)      # Zarinpal RefID after verify
-    paid_at = models.DateTimeField(null=True, blank=True)
-
+    ORDER_STATUS_CHOICES = [
+        ('pending', 'در انتظار تأیید'),
+        ('confirmed', 'تأیید شده'),
+        ('preparing', 'در حال آماده‌سازی'),
+        ('shipped', 'ارسال شده'),
+        ('delivered', 'تحویل داده شده'),
+        ('cancelled', 'لغو شده'),
+        ('returned', 'مرجوعی'),
+    ]
+    
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'در انتظار پرداخت'),
+        ('paid', 'پرداخت شده'),
+        ('failed', 'پرداخت ناموفق'),
+        ('refunded', 'بازگشت وجه'),
+    ]
+    
+    # Order Identification
+    order_number = models.CharField(max_length=20, unique=True, editable=False)
+    user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='orders')
+    
+    # Order Status
+    status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=20, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    
+    # Financial Information (Iranian Rial)
+    subtotal = models.DecimalField(max_digits=12, decimal_places=0)
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    shipping_cost = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    total_amount = models.DecimalField(max_digits=12, decimal_places=0)
+    
+    # Shipping Information
+    shipping_address = models.JSONField(help_text='آدرس ارسال به صورت JSON')
+    estimated_delivery_date = models.DateField(null=True, blank=True)
+    
+    # Customer Information
+    customer_phone = models.CharField(max_length=11)
+    customer_name = models.CharField(max_length=100)
+    
+    # Notes
+    customer_notes = models.TextField(blank=True, help_text='یادداشت مشتری')
+    admin_notes = models.TextField(blank=True, help_text='یادداشت مدیریت')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    confirmed_at = models.DateTimeField(null=True, blank=True)
+    shipped_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+    
     class Meta:
-        ordering = ("-updated", "-id")
-        indexes = [
-            models.Index(fields=["user", "status"]),
-            models.Index(fields=["created"]),
-        ]
+        db_table = 'orders'
+        ordering = ['-created_at']
+        verbose_name = 'سفارش'
+        verbose_name_plural = 'سفارشات'
+    
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        
+        # Auto-populate customer info from user profile
+        if not self.customer_name:
+            self.customer_name = self.user.get_full_name()
+        if not self.customer_phone:
+            self.customer_phone = self.user.phone_number
+            
+        super().save(*args, **kwargs)
+    
+    def generate_order_number(self):
+        """Generate unique order number"""
+        import random
+        import string
+        from datetime import datetime
+        
+        # Format: ORD-YYMMDD-XXXX (ORD-240101-1234)
+        date_part = datetime.now().strftime('%y%m%d')
+        random_part = ''.join(random.choices(string.digits, k=4))
+        return f"ORD-{date_part}-{random_part}"
 
-    def __str__(self):
-        return f"Order #{self.pk} - {self.user}"
-
-    def recalc_totals(self):
-        lines = list(self.items.all())
-        subtotal = sum(li.unit_price * li.quantity for li in lines)
-        discount = sum(li.line_discount_amount for li in lines)
-        self.subtotal_amount = int(subtotal)
-        self.discount_amount = int(discount)
-        self.payable_amount = int(subtotal - discount + self.shipping_amount)
-
-    @transaction.atomic
-    def mark_paid(self, authority=None, ref_id=None, paid_time=None):
-        # Idempotent state transition: only act if not already PAID
-        if self.status == Order.Status.PAID:
-            return
-        self.status = Order.Status.PAID
-        self.paid_at = paid_time or timezone.now()
-        if authority:
-            self.payment_authority = authority
-        if ref_id:
-            self.payment_ref_id = ref_id
-        self.save(update_fields=["status", "paid_at", "payment_authority", "payment_ref_id", "updated"])
-
-        # Decrement inventory safely once paid
-        for li in self.items.select_related("product").select_for_update():
-            if li.product and li.product.quantity is not None:
-                # Guard against negative inventory
-                new_qty = max(0, li.product.quantity - li.quantity)
-                li.product.quantity = new_qty
-                li.product.save(update_fields=["quantity"])
 
 class OrderItem(models.Model):
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="items")
-    product = models.ForeignKey(Product, on_delete=models.PROTECT, null=True, blank=True)
-    # Snapshot fields for audit/immutability
-    product_name = models.CharField(max_length=200)
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('products.Product', on_delete=models.PROTECT)
+    
+    # Product snapshot at time of order
+    product_name = models.CharField(max_length=100)
     product_sku = models.CharField(max_length=50)
-    unit_price = models.BigIntegerField()  # price per unit at time of order (Rial)
-    quantity = models.PositiveIntegerField(default=1, validators=[MinValueValidator(1)])
-
-    # Per-line discount model (percentage or absolute captured at order time)
-    discount_percent = models.PositiveIntegerField(
-        default=0, validators=[MinValueValidator(0), MaxValueValidator(100)]
-    )
-    discount_per_unit = models.BigIntegerField(default=0)  # optional absolute per-unit off in Rial
-
-    # Denormalized totals for speed and auditing
-    line_subtotal_amount = models.BigIntegerField(default=0)   # unit_price * qty
-    line_discount_amount = models.BigIntegerField(default=0)   # computed from percent/absolute
-    line_total_amount = models.BigIntegerField(default=0)      # subtotal - discount
-
-    created = models.DateTimeField(auto_now_add=True)
-
+    unit_price = models.DecimalField(max_digits=12, decimal_places=0)
+    
+    # Order specifics
+    quantity = models.PositiveIntegerField()
+    line_total = models.DecimalField(max_digits=12, decimal_places=0)
+    
+    # Discounts applied to this item
+    discount_amount = models.DecimalField(max_digits=12, decimal_places=0, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    
     class Meta:
-        ordering = ("order", "id")
-        indexes = [
-            models.Index(fields=["order"]),
-        ]
+        db_table = 'order_items'
+        unique_together = ['order', 'product']
+        verbose_name = 'آیتم سفارش'
+        verbose_name_plural = 'آیتم‌های سفارش'
+    
+    def save(self, *args, **kwargs):
+        # Calculate line total
+        self.line_total = (self.unit_price * self.quantity) - self.discount_amount
+        
+        # Store product snapshot
+        if not self.product_name:
+            self.product_name = self.product.name
+            self.product_sku = self.product.sku
+            
+        super().save(*args, **kwargs)
 
-    def __str__(self):
-        return f"Item #{self.pk} of Order #{self.order_id}"
+    def for_authenticated_user(self, user):
+        """Get all orders for authenticated user with user verification"""
+        if not user.is_authenticated:
+            return self.none()
+        return self.filter(user=user)
+    
+    def user_order_history(self, user, limit=10):
+        """Get recent order history for user"""
+        return self.for_authenticated_user(user).order_by('-created_at')[:limit]
+    
+    def user_total_spent(self, user):
+        """Calculate total amount spent by user"""
+        return self.filter(
+            user=user, 
+            payment_status='paid'
+        ).aggregate(
+            total=models.Sum('total_amount')
+        )['total'] or 0
 
-    def recompute(self):
-        self.line_subtotal_amount = int(self.unit_price * self.quantity)
-        percent_off = (self.discount_percent * self.unit_price) // 100 if self.discount_percent else 0
-        per_unit_discount = max(percent_off, self.discount_per_unit)
-        per_unit_discount = min(per_unit_discount, self.unit_price)  # prevent negative
-        self.line_discount_amount = int(per_unit_discount * self.quantity)
-        self.line_total_amount = int(self.line_subtotal_amount - self.line_discount_amount)
+class OrderStatusHistory(models.Model):
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_history')
+    previous_status = models.CharField(max_length=20, blank=True)
+    new_status = models.CharField(max_length=20)
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'order_status_history'
+        ordering = ['-created_at']
+        verbose_name = 'تاریخچه وضعیت سفارش'
+        verbose_name_plural = 'تاریخچه وضعیت سفارشات'

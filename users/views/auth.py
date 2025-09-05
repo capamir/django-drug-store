@@ -32,6 +32,9 @@ class PhoneEntryView(FormView):
         """Generate OTP and determine login vs register flow"""
         phone_number = form.cleaned_data['phone_number']
         
+        # CAPTURE NEXT URL FROM REQUEST - IMPORTANT FIX
+        next_url = self.request.GET.get('next') or self.request.POST.get('next')
+
         try:
             # Generate OTP with user status detection
             otp, user_exists = OTPVerification.generate_otp_with_user_status(phone_number)
@@ -41,6 +44,10 @@ class PhoneEntryView(FormView):
             self.request.session['user_exists'] = user_exists
             self.request.session['otp_generated_at'] = timezone.now().isoformat()
             
+            # STORE NEXT URL IN SESSION - IMPORTANT FIX
+            if next_url:
+                self.request.session['next_url'] = next_url
+
             # Send OTP via SMS
             self._send_otp_sms(phone_number, otp.otp_code)
             
@@ -172,6 +179,9 @@ class OTPVerificationView(FormView):
             
             # Login user
             login(self.request, user)
+
+            # Get next URL BEFORE clearing session
+            next_url = self.request.session.get('next_url')
             
             # Clear session data
             self._clear_auth_session()
@@ -182,9 +192,17 @@ class OTPVerificationView(FormView):
                 f'خوش آمدید {user.get_full_name()}!'
             )
             
-            # Redirect to dashboard or intended page
-            next_url = self.request.session.get('next_url', 'users:user_dashboard')
-            return redirect(next_url)
+            # IMPROVED REDIRECT LOGIC - IMPORTANT FIX
+            if next_url:
+                # Don't redirect directly to POST endpoints
+                if '/cart/add/' in next_url:
+                    # Redirect to cart page instead of direct add action
+                    messages.info(self.request, 'لطفاً محصول مورد نظر را مجدداً به سبد خرید اضافه کنید')
+                    return redirect('orders:cart')
+                else:
+                    return redirect(next_url)
+            
+            return redirect('users:user_dashboard')
             
         except User.DoesNotExist:
             messages.error(self.request, 'کاربر یافت نشد')
