@@ -15,9 +15,9 @@ Product Detail Page START -->
                     <div class="col-12">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb breadcrumb-dots">
-                                <li class="breadcrumb-item"><a href="{% url 'products:home' %}">خانه</a></li>
+                                <li class="breadcrumb-item"><a href="{% url 'products:product_list' %}">خانه</a></li>
                                 {% if product.category %}
-                                    <li class="breadcrumb-item"><a href="#">{{ product.category.name }}</a></li>
+                                    <li class="breadcrumb-item"><a href="">{{ product.category.name }}</a></li>
                                 {% endif %}
                                 <li class="breadcrumb-item active" aria-current="page">{{ product.name }}</li>
                             </ol>
@@ -61,7 +61,22 @@ Product Detail Page START -->
                                 <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid w-100" style="max-height: 400px; object-fit: cover;">
                             {% else %}
                                 <div class="bg-light d-flex align-items-center justify-content-center" style="height: 400px;">
-                                    <i class="fas fa-image fa-5x text-muted"></i>
+                                    <div class="text-center">
+                                        <i class="fas fa-pills fa-5x text-muted mb-3"></i>
+                                        <p class="text-muted">{{ product.name }}</p>
+                                    </div>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Discount Badge -->
+                            {% if product.has_discount %}
+                                <div class="position-absolute top-0 end-0 m-3">
+                                    {% if product.discount_percent > 0 %}
+                                        <span class="badge bg-danger fs-6 px-3 py-2">{{ product.discount_percent }}% تخفیف</span>
+                                    {% endif %}
+                                    {% if product.discount_per_unit > 0 %}
+                                        <span class="badge bg-warning text-dark fs-6 px-3 py-2">{{ product.discount_per_unit|floatformat:0|intcomma }} ریال تخفیف</span>
+                                    {% endif %}
                                 </div>
                             {% endif %}
                         </div>
@@ -132,20 +147,41 @@ Product Detail Page START -->
                                     {% for related in product.related_products.all %}
                                     <div class="col-md-4">
                                         <div class="card h-100">
-                                            {% if related.image %}
-                                                <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}" style="height: 150px; object-fit: cover;">
-                                            {% endif %}
+                                            <div class="position-relative">
+                                                {% if related.image %}
+                                                    <img src="{{ related.image.url }}" class="card-img-top" alt="{{ related.name }}" style="height: 150px; object-fit: cover;">
+                                                {% else %}
+                                                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 150px;">
+                                                        <i class="fas fa-pills fa-3x text-muted"></i>
+                                                    </div>
+                                                {% endif %}
+                                                
+                                                {% if related.has_discount %}
+                                                    <span class="position-absolute top-0 end-0 badge bg-danger m-2">تخفیف</span>
+                                                {% endif %}
+                                            </div>
                                             <div class="card-body p-3">
                                                 <h6 class="card-title mb-2">{{ related.name|truncatechars:50 }}</h6>
                                                 <p class="text-success fw-bold mb-1">
                                                     {% if related.has_discount %}
-                                                        <span class="text-decoration-line-through text-muted small">{{ related.unit_price|floatformat:0 }}</span>
-                                                        {{ related.effective_unit_price|floatformat:0 }} ریال
+                                                        <span class="text-decoration-line-through text-muted small">{{ related.unit_price|floatformat:0|intcomma }}</span>
+                                                        {{ related.effective_unit_price|floatformat:0|intcomma }} ریال
                                                     {% else %}
-                                                        {{ related.unit_price|floatformat:0 }} ریال
+                                                        {{ related.unit_price|floatformat:0|intcomma }} ریال
                                                     {% endif %}
                                                 </p>
-                                                <a href="{% url 'products:product_detail' related.slug %}" class="btn btn-sm btn-outline-primary">مشاهده</a>
+                                                <div class="d-flex gap-1">
+                                                    <a href="{% url 'products:product_detail' related.slug %}" class="btn btn-sm btn-outline-primary flex-fill">مشاهده</a>
+                                                    {% if related.is_available %}
+                                                        <form method="post" action="{% url 'orders:add_to_cart' related.id %}" class="d-inline">
+                                                            {% csrf_token %}
+                                                            <input type="hidden" name="quantity" value="1">
+                                                            <button type="submit" class="btn btn-sm btn-success" title="افزودن به سبد">
+                                                                <i class="fas fa-plus"></i>
+                                                            </button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -180,6 +216,11 @@ Product Detail Page START -->
                                             {% if product.discount_percent > 0 %}
                                                 <span class="badge bg-danger ms-1">{{ product.discount_percent }}% تخفیف</span>
                                             {% endif %}
+                                            {% if product.discount_per_unit > 0 %}
+                                                <div class="mt-1">
+                                                    <small class="text-success">صرفه‌جویی: {{ product.discount_per_unit|floatformat:0|intcomma }} ریال</small>
+                                                </div>
+                                            {% endif %}
                                         {% else %}
                                             <h3 class="fw-bold mb-0 me-2 fs-5">{{ product.unit_price|floatformat:0|intcomma }} ریال</h3>
                                         {% endif %}
@@ -191,9 +232,9 @@ Product Detail Page START -->
                                             <i class="fas fa-fw fa-share-alt"></i>
                                         </a>
                                         <ul class="dropdown-menu dropdown-w-sm dropdown-menu-end min-w-auto shadow rounded" aria-labelledby="dropdownShare">
-                                            <li><a class="dropdown-item" href="#"><i class="fab fa-telegram me-2"></i>تلگرام</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="fab fa-whatsapp me-2"></i>واتس‌اپ</a></li>
-                                            <li><a class="dropdown-item" href="#"><i class="fas fa-copy me-2"></i>کپی لینک</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="shareToTelegram()"><i class="fab fa-telegram me-2"></i>تلگرام</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="shareToWhatsApp()"><i class="fab fa-whatsapp me-2"></i>واتس‌اپ</a></li>
+                                            <li><a class="dropdown-item" href="#" onclick="copyLink()"><i class="fas fa-copy me-2"></i>کپی لینک</a></li>
                                         </ul>
                                     </div>
                                 </div>
@@ -205,40 +246,74 @@ Product Detail Page START -->
                                 </div>
                                 {% endwith %}
                                 
-                                <!-- Add to Cart Form -->
+                                <!-- Add to Cart Section -->
                                 <div class="mt-3">
-                                    {% if product.is_available %}
-                                        <form method="post" action="{% url 'orders:cart_add' product.id %}">
-                                            {% csrf_token %}
-                                            
-                                            <!-- Quantity Selector -->
-                                            <div class="d-flex align-items-center mb-3">
-                                                <label for="quantity" class="form-label me-2 mb-0">تعداد:</label>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="decrease-qty">
-                                                    <i class="fas fa-minus"></i>
+                                    {% if user.is_authenticated %}
+                                        {% if product.is_available %}
+                                            <form method="post" action="{% url 'orders:add_to_cart' product.id %}" id="add-to-cart-form">
+                                                {% csrf_token %}
+                                                
+                                                <!-- Quantity Selector -->
+                                                <div class="d-flex align-items-center mb-3">
+                                                    <label for="quantity" class="form-label me-2 mb-0">تعداد:</label>
+                                                    <div class="input-group" style="width: 150px;">
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="decrease-qty">
+                                                            <i class="fas fa-minus"></i>
+                                                        </button>
+                                                        <input type="number" id="quantity" name="quantity" 
+                                                            class="form-control form-control-sm text-center" 
+                                                            value="1" min="1" max="{{ product.quantity }}" required>
+                                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="increase-qty">
+                                                            <i class="fas fa-plus"></i>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                <small class="text-muted d-block mb-3">حداکثر: {{ product.quantity }} عدد</small>
+                                                
+                                                <!-- Total Price Display -->
+                                                <div class="mb-3">
+                                                    <div class="d-flex justify-content-between align-items-center p-2 bg-light rounded">
+                                                        <span class="fw-bold">قیمت کل:</span>
+                                                        <span class="fw-bold text-success" id="total-price">
+                                                            {{ product.effective_unit_price|floatformat:0|intcomma }} ریال
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Add to Cart Buttons -->
+                                                <div class="d-grid gap-2">
+                                                    <button type="submit" class="btn btn-primary">
+                                                        <i class="fas fa-shopping-cart me-2"></i>افزودن به سبد خرید
+                                                    </button>
+                                                    <button type="button" class="btn btn-success" onclick="quickOrder()">
+                                                        <i class="fas fa-bolt me-2"></i>سفارش سریع
+                                                    </button>
+                                                </div>
+                                            </form>
+                                        {% else %}
+                                            <div class="text-center py-3">
+                                                <button class="btn btn-secondary w-100" disabled>
+                                                    <i class="fas fa-times me-2"></i>موجود نیست
                                                 </button>
-                                                <input type="number" id="quantity" name="quantity" 
-                                                       class="form-control form-control-sm mx-2 text-center" 
-                                                       value="1" min="1" max="{{ product.quantity }}" style="width: 70px;" required>
-                                                <button type="button" class="btn btn-outline-secondary btn-sm" id="increase-qty">
-                                                    <i class="fas fa-plus"></i>
+                                                <button class="btn btn-outline-info mt-2 w-100" onclick="notifyWhenAvailable()">
+                                                    <i class="fas fa-bell me-2"></i>اطلاع از موجود شدن
                                                 </button>
                                             </div>
-                                            <small class="text-muted d-block mb-3">حداکثر: {{ product.quantity }} عدد</small>
-                                            
-                                            <!-- Add to Cart Button -->
-                                            <div class="d-grid">
-                                                <button type="submit" class="btn btn-primary">
-                                                    <i class="fas fa-shopping-cart me-2"></i>افزودن به سبد خرید
-                                                </button>
-                                            </div>
-                                        </form>
+                                        {% endif %}
                                     {% else %}
-                                        <button class="btn btn-secondary w-100" disabled>
-                                            <i class="fas fa-times me-2"></i>موجود نیست
-                                        </button>
+                                        <!-- Login Required -->
+                                        <div class="text-center py-3">
+                                            <div class="mb-3">
+                                                <i class="fas fa-user-circle fa-2x text-primary mb-2"></i>
+                                                <p class="mb-2">برای خرید وارد شوید</p>
+                                            </div>
+                                            <a href="{% url 'users:phone_entry' %}?next={{ request.get_full_path }}" class="btn btn-primary w-100">
+                                                <i class="fas fa-sign-in-alt me-2"></i>ورود / ثبت نام
+                                            </a>
+                                        </div>
                                     {% endif %}
                                 </div>
+
                                 
                                 <hr>
 
@@ -299,15 +374,15 @@ Product Detail Page START -->
                                     {% if product.category %}
                                         {% if product.category.parent %}
                                             <li class="list-inline-item">
-                                                <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.parent.name }}</a>
+                                                <a class="btn btn-outline-light btn-sm" href="">{{ product.category.parent.name }}</a>
                                             </li>
                                         {% endif %}
                                         <li class="list-inline-item">
-                                            <a class="btn btn-outline-light btn-sm" href="#">{{ product.category.name }}</a>
+                                            <a class="btn btn-outline-light btn-sm" href="">{{ product.category.name }}</a>
                                         </li>
                                         {% for sibling in product.category.children.all %}
                                             <li class="list-inline-item">
-                                                <a class="btn btn-outline-light btn-sm" href="#">{{ sibling.name }}</a>
+                                                <a class="btn btn-outline-light btn-sm" href="">{{ sibling.name }}</a>
                                             </li>
                                         {% endfor %}
                                     {% endif %}
@@ -330,9 +405,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const quantityInput = document.getElementById('quantity');
     const decreaseBtn = document.getElementById('decrease-qty');
     const increaseBtn = document.getElementById('increase-qty');
+    const totalPriceElement = document.getElementById('total-price');
     
     if (quantityInput && decreaseBtn && increaseBtn) {
         const maxQuantity = parseInt(quantityInput.max);
+        const unitPrice = {{ product.effective_unit_price|default:0 }};
         
         function updateButtons() {
             const value = parseInt(quantityInput.value);
@@ -340,11 +417,20 @@ document.addEventListener('DOMContentLoaded', function() {
             increaseBtn.disabled = value >= maxQuantity;
         }
         
+        function updateTotalPrice() {
+            const quantity = parseInt(quantityInput.value) || 1;
+            const totalPrice = quantity * unitPrice;
+            if (totalPriceElement) {
+                totalPriceElement.textContent = new Intl.NumberFormat('fa-IR').format(totalPrice) + ' ریال';
+            }
+        }
+        
         function decreaseQuantity() {
             const currentValue = parseInt(quantityInput.value);
             if (currentValue > 1) {
                 quantityInput.value = currentValue - 1;
                 updateButtons();
+                updateTotalPrice();
             }
         }
         
@@ -353,6 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (currentValue < maxQuantity) {
                 quantityInput.value = currentValue + 1;
                 updateButtons();
+                updateTotalPrice();
             }
         }
         
@@ -364,6 +451,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 quantityInput.value = maxQuantity;
             }
             updateButtons();
+            updateTotalPrice();
         }
         
         // Event listeners
@@ -374,7 +462,55 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Initial state
         updateButtons();
+        updateTotalPrice();
     }
 });
+
+// Quick Order Function
+function quickOrder() {
+    const form = document.getElementById('add-to-cart-form');
+    if (form) {
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: 'POST',
+            body: formData,
+        }).then(response => {
+            if (response.ok) {
+                window.location.href = '{% url "orders:checkout" %}';
+            } else {
+                alert('خطا در افزودن به سبد خرید');
+            }
+        }).catch(error => {
+            console.error('Error:', error);
+            alert('خطا در ارتباط با سرور');
+        });
+    }
+}
+
+// Share Functions
+function shareToTelegram() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent('{{ product.name }}');
+    window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank');
+}
+
+function shareToWhatsApp() {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent('{{ product.name }} - ');
+    window.open(`https://wa.me/?text=${text}${url}`, '_blank');
+}
+
+function copyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+        alert('لینک کپی شد!');
+    }).catch(() => {
+        alert('خطا در کپی لینک');
+    });
+}
+
+function notifyWhenAvailable() {
+    alert('قابلیت اطلاع‌رسانی به زودی اضافه خواهد شد.');
+}
 </script>
 {% endblock %}

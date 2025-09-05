@@ -6,7 +6,107 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
+class Cart(models.Model):
+    """Shopping cart for authenticated users"""
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='cart')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'carts'
+        verbose_name = 'سبد خرید'
+        verbose_name_plural = 'سبدهای خرید'
+    
+    def __str__(self):
+        return f"سبد خرید {self.user.get_full_name() or self.user.phone_number}"
+    
+    @property
+    def total_items(self):
+        """Get total number of items in cart"""
+        return self.items.aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
+    
+    @property
+    def subtotal_price(self):
+        """Calculate subtotal price of cart"""
+        total = Decimal('0')
+        for item in self.items.select_related('product'):
+            total += item.line_total
+        return total
+    
+    @property
+    def is_empty(self):
+        """Check if cart is empty"""
+        return not self.items.exists()
+    
+    def clear(self):
+        """Clear all items from cart"""
+        self.items.all().delete()
+        
+    def get_total_discount(self):
+        """Calculate total discount amount"""
+        total_discount = Decimal('0')
+        for item in self.items.select_related('product'):
+            if item.product.has_discount:
+                original_price = item.product.unit_price * item.quantity
+                discounted_price = item.line_total
+                total_discount += (original_price - discounted_price)
+        return total_discount
+
+
+class CartItem(models.Model):
+    """Individual item in shopping cart"""
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey('products.Product', on_delete=models.PROTECT)
+    quantity = models.PositiveIntegerField(default=1)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'cart_items'
+        verbose_name = 'آیتم سبد خرید'
+        verbose_name_plural = 'آیتم‌های سبد خرید'
+        unique_together = ['cart', 'product']
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.quantity}x {self.product.name}"
+    
+    @property
+    def line_total(self):
+        """Calculate line total with discounts applied"""
+        if self.product.has_discount:
+            return self.product.effective_unit_price * self.quantity
+        return self.product.unit_price * self.quantity
+    
+    @property
+    def unit_price(self):
+        """Get effective unit price"""
+        return self.product.effective_unit_price
+    
+    @property
+    def original_line_total(self):
+        """Get original line total without discounts"""
+        return self.product.unit_price * self.quantity
+    
+    @property
+    def discount_amount(self):
+        """Get discount amount for this item"""
+        if self.product.has_discount:
+            return self.original_line_total - self.line_total
+        return Decimal('0')
+    
+    def save(self, *args, **kwargs):
+        # Validate quantity against stock
+        if self.quantity > self.product.quantity:
+            raise ValueError(f'موجودی {self.product.name} کافی نیست.')
+        super().save(*args, **kwargs)
+
+
 class Order(models.Model):
+    """Customer order"""
     ORDER_STATUS_CHOICES = [
         ('pending', 'در انتظار تأیید'),
         ('confirmed', 'تأیید شده'),
@@ -27,6 +127,9 @@ class Order(models.Model):
     # Order Identification
     order_number = models.CharField(max_length=20, unique=True, editable=False)
     user = models.ForeignKey(User, on_delete=models.PROTECT, related_name='orders')
+    
+    # Link to original cart (optional, for reference)
+    cart = models.OneToOneField(Cart, on_delete=models.SET_NULL, null=True, blank=True, related_name='order')
     
     # Order Status
     status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='pending')
@@ -57,6 +160,8 @@ class Order(models.Model):
     shipped_at = models.DateTimeField(null=True, blank=True)
     delivered_at = models.DateTimeField(null=True, blank=True)
     
+    objects = models.Manager()  # We'll add custom manager in managers.py
+    
     class Meta:
         db_table = 'orders'
         ordering = ['-created_at']
@@ -81,13 +186,43 @@ class Order(models.Model):
         import string
         from datetime import datetime
         
-        # Format: ORD-YYMMDD-XXXX (ORD-240101-1234)
-        date_part = datetime.now().strftime('%y%m%d')
-        random_part = ''.join(random.choices(string.digits, k=4))
-        return f"ORD-{date_part}-{random_part}"
+        # Ensure uniqueness
+        while True:
+            date_part = datetime.now().strftime('%y%m%d')
+            random_part = ''.join(random.choices(string.digits, k=4))
+            order_number = f"ORD-{date_part}-{random_part}"
+            
+            if not Order.objects.filter(order_number=order_number).exists():
+                return order_number
+    
+    def __str__(self):
+        return f"سفارش {self.order_number}"
+    
+    @property
+    def can_be_cancelled(self):
+        """Check if order can be cancelled"""
+        return self.status in ['pending', 'confirmed'] and self.payment_status != 'paid'
+    
+    @property
+    def can_be_returned(self):
+        """Check if order can be returned"""
+        return (
+            self.status == 'delivered' and
+            self.payment_status == 'paid' and
+            self.delivered_at and
+            (timezone.now().date() - self.delivered_at.date()).days <= 7
+        )
+    
+    @property
+    def items_count(self):
+        """Get total number of items in order"""
+        return self.items.aggregate(
+            total=models.Sum('quantity')
+        )['total'] or 0
 
 
 class OrderItem(models.Model):
+    """Individual item in an order"""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey('products.Product', on_delete=models.PROTECT)
     
@@ -110,6 +245,7 @@ class OrderItem(models.Model):
         unique_together = ['order', 'product']
         verbose_name = 'آیتم سفارش'
         verbose_name_plural = 'آیتم‌های سفارش'
+        ordering = ['id']
     
     def save(self, *args, **kwargs):
         # Calculate line total
@@ -121,27 +257,13 @@ class OrderItem(models.Model):
             self.product_sku = self.product.sku
             
         super().save(*args, **kwargs)
+    
+    def __str__(self):
+        return f"{self.quantity}x {self.product_name} - {self.order.order_number}"
 
-    def for_authenticated_user(self, user):
-        """Get all orders for authenticated user with user verification"""
-        if not user.is_authenticated:
-            return self.none()
-        return self.filter(user=user)
-    
-    def user_order_history(self, user, limit=10):
-        """Get recent order history for user"""
-        return self.for_authenticated_user(user).order_by('-created_at')[:limit]
-    
-    def user_total_spent(self, user):
-        """Calculate total amount spent by user"""
-        return self.filter(
-            user=user, 
-            payment_status='paid'
-        ).aggregate(
-            total=models.Sum('total_amount')
-        )['total'] or 0
 
 class OrderStatusHistory(models.Model):
+    """History of order status changes"""
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='status_history')
     previous_status = models.CharField(max_length=20, blank=True)
     new_status = models.CharField(max_length=20)
@@ -154,3 +276,6 @@ class OrderStatusHistory(models.Model):
         ordering = ['-created_at']
         verbose_name = 'تاریخچه وضعیت سفارش'
         verbose_name_plural = 'تاریخچه وضعیت سفارشات'
+    
+    def __str__(self):
+        return f"{self.order.order_number}: {self.previous_status} → {self.new_status}"

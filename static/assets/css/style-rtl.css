@@ -23871,3 +23871,34 @@ html[dir="rtl"] .choices__input {
 
 /*User CSS*/
 /*# sourceMappingURL=style-rtl.css.map */
+.icon-md {
+    width: 40px;
+    height: 40px;
+    text-decoration: none;
+}
+
+.quantity-input {
+    width: 50px;
+}
+
+.card-overlay-hover .card-element-hover {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.card-overlay-hover:hover .card-element-hover {
+    opacity: 1;
+}
+
+.badge {
+    font-size: 0.75rem;
+}
+
+.input-group .btn {
+    border: 1px solid #ddd;
+}
+
+.input-group .form-control {
+    border-left: none;
+    border-right: none;
+}

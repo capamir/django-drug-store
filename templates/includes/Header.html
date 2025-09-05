@@ -114,8 +114,8 @@
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'users:user_dashboard' %}"><i class="fas fa-user fa-fw me-2"></i>پروفایل من</a></li>
                         <li><a class="dropdown-item" href="{% url 'orders:cart_detail' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
-                        <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="fas fa-list fa-fw me-2"></i>سفارشات من</a></li>
-                        <li><a class="dropdown-item" href="{% url 'orders:order_tracking' %}"><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
+                        <li><a class="dropdown-item" href=""><i class="fas fa-list fa-fw me-2"></i>سفارشات من</a></li>
+                        <li><a class="dropdown-item" href=""><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i>خروج</a></li>
                     </ul>
@@ -148,7 +148,7 @@
                         <a class="nav-link dropdown-toggle" href="#" id="categoryMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">دسته‌بندی‌ها</a>
                         <ul class="dropdown-menu" aria-labelledby="categoryMenu">
                             {% for category in categories %}
-                            <li><a class="dropdown-item" href="{% url 'products:category_products' category.slug %}">{{ category.name }}</a></li>
+                            <li><a class="dropdown-item" href="">{{ category.name }}</a></li>
                             {% endfor %}
                         </ul>
                     </li>
@@ -164,10 +164,10 @@
                         <a class="nav-link dropdown-toggle" href="#" id="ordersMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">سفارشات</a>
                         <ul class="dropdown-menu" aria-labelledby="ordersMenu">
                             <li><a class="dropdown-item" href="{% url 'orders:cart_detail' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
-                            <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="fas fa-history fa-fw me-2"></i>تاریخچه سفارشات</a></li>
-                            <li><a class="dropdown-item" href="{% url 'orders:order_tracking' %}"><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
+                            <li><a class="dropdown-item" href=""><i class="fas fa-history fa-fw me-2"></i>تاریخچه سفارشات</a></li>
+                            <li><a class="dropdown-item" href=""><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'orders:pending_orders' %}"><i class="fas fa-clock fa-fw me-2"></i>سفارشات در انتظار</a></li>
+                            <li><a class="dropdown-item" href=""><i class="fas fa-clock fa-fw me-2"></i>سفارشات در انتظار</a></li>
                         </ul>
                     </li>
                     {% endif %}
@@ -184,18 +184,7 @@
                 </ul>
                 <!-- Nav category menu END -->
 
-                <!-- Nav Search START -->
-                <div class="nav my-3 my-xl-0 px-4 flex-nowrap align-items-center">
-                    <div class="nav-item w-100">
-                        <form class="position-relative" method="GET" action="{% url 'products:product_list' %}">
-                            <input class="form-control pe-5 bg-transparent" type="search" name="search" placeholder="جستجوی محصولات..." aria-label="Search" value="{{ request.GET.search }}">
-                            <button class="bg-transparent p-2 position-absolute top-50 end-0 translate-middle-y border-0 text-primary-hover text-reset" type="submit">
-                                <i class="fas fa-search fs-6"></i>
-                            </button>
-                        </form>
-                    </div>
-                </div>
-                <!-- Nav Search END -->
+                
             </div>
             <!-- Main navbar END -->
         </div>
