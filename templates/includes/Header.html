@@ -12,8 +12,126 @@
             </a>
             <!-- Logo END -->
 
+            <!-- Cart and Profile (Always visible on mobile) START -->
+            <div class="d-flex align-items-center order-xl-3">
+                <!-- Shopping Cart START -->
+                <div class="nav-item dropdown me-2">
+                    <a class="nav-link position-relative" href="#" id="cartDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-shopping-cart fa-fw"></i>
+                        <!-- Cart Badge -->
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-badge" style="display: none;">
+                            0
+                        </span>
+                    </a>
+                    
+                    <!-- Cart dropdown START -->
+                    <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="cartDropdown" id="cart-dropdown">
+                        <div class="card bg-transparent border-0">
+                            <!-- Card header -->
+                            <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
+                                <h6 class="mb-0">سبد خرید</h6>
+                                <span class="badge bg-primary" id="cart-items-count-header">0 محصول</span>
+                            </div>
+                            
+                            <!-- Card body -->
+                            <div class="card-body p-0">
+                                <!-- Empty cart message -->
+                                <div class="text-center p-4" id="empty-cart-message">
+                                    <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                    <p class="mb-0 text-muted">سبد خرید شما خالی است</p>
+                                </div>
+                                
+                                <!-- Cart items container -->
+                                <div class="list-group list-group-flush" id="cart-items-container" style="max-height: 300px; overflow-y: auto;">
+                                    <!-- Cart items will be populated by JavaScript -->
+                                </div>
+                                
+                                <!-- Loading spinner -->
+                                <div class="text-center p-3 d-none" id="cart-loading">
+                                    <div class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">در حال بارگذاری...</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Card footer -->
+                            <div class="card-footer bg-light d-none" id="cart-footer">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="fw-bold">جمع کل:</span>
+                                    <span class="fw-bold text-success" id="cart-total-price">0 ریال</span>
+                                </div>
+                                <div class="d-grid gap-2">
+                                    <a href="" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-eye me-1"></i>مشاهده سبد خرید
+                                    </a>
+                                    <a href="" class="btn btn-success btn-sm">
+                                        <i class="fas fa-credit-card me-1"></i>پرداخت
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cart dropdown END -->
+                </div>
+                <!-- Shopping Cart END -->
+
+                <!-- Profile dropdown START -->
+                {% if user.is_authenticated %}
+                <div class="nav-item dropdown">
+                    <a class="nav-link" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle fa-fw"></i>
+                    </a>
+                    <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
+                        <!-- Profile info -->
+                        <li class="px-3 mb-3">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar avatar-sm me-3">
+                                    <i class="fas fa-user-circle fa-2x text-muted"></i>
+                                </div>
+                                <div>
+                                    <h6 class="mb-0">
+                                        {% if user.get_full_name %}
+                                            {{ user.get_full_name }}
+                                        {% elif user.first_name %}
+                                            {{ user.first_name }} {{ user.last_name|default:"" }}
+                                        {% elif user.phone_number %}
+                                            {{ user.phone_number }}
+                                        {% else %}
+                                            {{ user }}
+                                        {% endif %}
+                                    </h6>
+                                    <p class="small mb-0">
+                                        {% if user.email %}
+                                            {{ user.email }}
+                                        {% elif user.phone_number %}
+                                            {{ user.phone_number }}
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </li>
+                        <!-- Links -->
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'users:user_dashboard' %}"><i class="fas fa-user fa-fw me-2"></i>پروفایل من</a></li>
+                        <li><a class="dropdown-item" href="{% url 'orders:cart_detail' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
+                        <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="fas fa-list fa-fw me-2"></i>سفارشات من</a></li>
+                        <li><a class="dropdown-item" href="{% url 'orders:order_tracking' %}"><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i>خروج</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <!-- Login/Register buttons for non-authenticated users -->
+                <div class="nav-item">
+                    <a href="{% url 'users:phone_entry' %}" class="btn btn-primary btn-sm">ثبت نام/ورود</a>
+                </div>
+                {% endif %}
+                <!-- Profile dropdown END -->
+            </div>
+            <!-- Cart and Profile (Always visible on mobile) END -->
+
             <!-- Responsive navbar toggler -->
-            <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler ms-2 order-xl-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-animation">
                     <span></span>
                     <span></span>
@@ -22,7 +140,7 @@
             </button>
 
             <!-- Main navbar START -->
-            <div class="navbar-collapse w-100 collapse" id="navbarCollapse">
+            <div class="navbar-collapse w-100 collapse order-xl-1" id="navbarCollapse">
                 <!-- Nav category menu START -->
                 <ul class="navbar-nav navbar-nav-scroll me-auto">
                     <!-- Nav item: Categories -->
@@ -39,6 +157,20 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'products:product_list' %}">محصولات</a>
                     </li>
+
+                    <!-- Nav item: Orders (Only for authenticated users) -->
+                    {% if user.is_authenticated %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="ordersMenu" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">سفارشات</a>
+                        <ul class="dropdown-menu" aria-labelledby="ordersMenu">
+                            <li><a class="dropdown-item" href="{% url 'orders:cart_detail' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:order_history' %}"><i class="fas fa-history fa-fw me-2"></i>تاریخچه سفارشات</a></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:order_tracking' %}"><i class="fas fa-truck fa-fw me-2"></i>پیگیری سفارش</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{% url 'orders:pending_orders' %}"><i class="fas fa-clock fa-fw me-2"></i>سفارشات در انتظار</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
                     
                     <!-- Nav item: About -->
                     <li class="nav-item">
@@ -64,122 +196,6 @@
                     </div>
                 </div>
                 <!-- Nav Search END -->
-
-                <!-- Profile and Cart START -->
-                <div class="navbar-nav ms-auto">
-                    
-                    <!-- Shopping Cart START -->
-                    <div class="nav-item dropdown ms-0 ms-md-3">
-                        <a class="nav-link position-relative" href="#" id="cartDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-shopping-cart fa-fw"></i>
-                            <!-- Cart Badge -->
-                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" id="cart-badge" style="display: none;">
-                                0
-                            </span>
-                        </a>
-                        
-                        <!-- Cart dropdown START -->
-                        <div class="dropdown-menu dropdown-animation dropdown-menu-end dropdown-menu-size-md p-0 shadow-lg border-0" aria-labelledby="cartDropdown" id="cart-dropdown">
-                            <div class="card bg-transparent border-0">
-                                <!-- Card header -->
-                                <div class="card-header bg-light border-bottom d-flex justify-content-between align-items-center">
-                                    <h6 class="mb-0">سبد خرید</h6>
-                                    <span class="badge bg-primary" id="cart-items-count-header">0 محصول</span>
-                                </div>
-                                
-                                <!-- Card body -->
-                                <div class="card-body p-0">
-                                    <!-- Empty cart message -->
-                                    <div class="text-center p-4" id="empty-cart-message">
-                                        <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
-                                        <p class="mb-0 text-muted">سبد خرید شما خالی است</p>
-                                    </div>
-                                    
-                                    <!-- Cart items container -->
-                                    <div class="list-group list-group-flush" id="cart-items-container" style="max-height: 300px; overflow-y: auto;">
-                                        <!-- Cart items will be populated by JavaScript -->
-                                    </div>
-                                    
-                                    <!-- Loading spinner -->
-                                    <div class="text-center p-3 d-none" id="cart-loading">
-                                        <div class="spinner-border spinner-border-sm" role="status">
-                                            <span class="visually-hidden">در حال بارگذاری...</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Card footer -->
-                                <div class="card-footer bg-light d-none" id="cart-footer">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <span class="fw-bold">جمع کل:</span>
-                                        <span class="fw-bold text-success" id="cart-total-price">0 ریال</span>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <a href="{% url 'orders:cart' %}" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-eye me-1"></i>مشاهده سبد خرید
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- Cart dropdown END -->
-                    </div>
-                    <!-- Shopping Cart END -->
-
-                    <!-- Profile dropdown START -->
-                    {% if user.is_authenticated %}
-                    <div class="nav-item dropdown ms-2">
-                        <a class="nav-link" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle fa-fw"></i>
-                        </a>
-                        <ul class="dropdown-menu dropdown-animation dropdown-menu-end shadow pt-3" aria-labelledby="profileDropdown">
-                            <!-- Profile info -->
-                            <li class="px-3 mb-3">
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar avatar-sm me-3">
-                                        <i class="fas fa-user-circle fa-2x text-muted"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0">
-                                            {% if user.get_full_name %}
-                                                {{ user.get_full_name }}
-                                            {% elif user.first_name %}
-                                                {{ user.first_name }} {{ user.last_name|default:"" }}
-                                            {% elif user.phone_number %}
-                                                {{ user.phone_number }}
-                                            {% else %}
-                                                {{ user }}
-                                            {% endif %}
-                                        </h6>
-                                        <p class="small mb-0">
-                                            {% if user.email %}
-                                                {{ user.email }}
-                                            {% elif user.phone_number %}
-                                                {{ user.phone_number }}
-                                            {% endif %}
-                                        </p>
-                                    </div>
-                                </div>
-                            </li>
-                            <!-- Links -->
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'users:user_dashboard' %}"><i class="fas fa-user fa-fw me-2"></i>پروفایل من</a></li>
-                            <li><a class="dropdown-item" href="{% url 'orders:cart' %}"><i class="fas fa-shopping-cart fa-fw me-2"></i>سبد خرید</a></li>
-                            <li><a class="dropdown-item" href="#"><i class="fas fa-list fa-fw me-2"></i>سفارشات من</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'users:logout' %}"><i class="fas fa-sign-out-alt fa-fw me-2"></i>خروج</a></li>
-                        </ul>
-                    </div>
-                    {% else %}
-                    <!-- Login/Register buttons for non-authenticated users -->
-                    <div class="nav-item ms-2">
-                        <a href="{% url 'users:phone_entry' %}" class="btn btn-outline-primary btn-sm me-2">ورود</a>
-                        <a href="{% url 'users:phone_entry' %}" class="btn btn-primary btn-sm">ثبت نام</a>
-                    </div>
-                    {% endif %}
-                    <!-- Profile dropdown END -->
-                </div>
-                <!-- Profile and Cart END -->
             </div>
             <!-- Main navbar END -->
         </div>
@@ -233,9 +249,29 @@
     min-width: 320px;
 }
 
+/* Ensure cart and profile are always visible */
+@media (max-width: 1199.98px) {
+    .navbar-toggler {
+        order: 2;
+    }
+    
+    .order-xl-1 {
+        order: 3;
+    }
+    
+    .order-xl-3 {
+        order: 1;
+    }
+}
+
 @media (max-width: 576px) {
     .dropdown-menu-size-md {
         min-width: 280px;
+    }
+    
+    /* Stack login buttons on very small screens */
+    .nav-item .btn {
+        margin-bottom: 4px;
     }
 }
 </style>
@@ -269,15 +305,21 @@ class HeaderCartManager {
         window.addEventListener('cartUpdated', () => {
             this.loadCartSummary();
         });
+        
+        // Auto-refresh cart every 30 seconds for live updates
+        setInterval(() => {
+            this.loadCartSummary();
+        }, 30000);
     }
     
     async loadCartSummary() {
         this.showLoading();
         
         try {
-            const response = await fetch('{% url "orders:cart" %}', {
+            const response = await fetch('', {
                 headers: {
-                    'X-Requested-With': 'XMLHttpRequest'
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/json',
                 }
             });
             
@@ -285,6 +327,8 @@ class HeaderCartManager {
             
             if (data.success) {
                 this.updateCartDisplay(data);
+            } else {
+                console.error('Cart API error:', data.message);
             }
         } catch (error) {
             console.error('Cart loading error:', error);
@@ -295,18 +339,18 @@ class HeaderCartManager {
     
     updateCartDisplay(data) {
         const hasItems = data.has_items;
-        const itemCount = data.count;
+        const itemCount = data.total_items;
         
         // Update badge
-        if (hasItems) {
-            this.cartBadge.textContent = itemCount;
+        if (hasItems && itemCount > 0) {
+            this.cartBadge.textContent = itemCount > 99 ? '99+' : itemCount;
             this.cartBadge.style.display = 'block';
         } else {
             this.cartBadge.style.display = 'none';
         }
         
         // Update header count
-        this.cartItemsCount.textContent = `${data.item_count} محصول`;
+        this.cartItemsCount.textContent = `${itemCount} محصول`;
         
         if (hasItems) {
             this.showCartItems(data.items, data.totals);
@@ -335,12 +379,16 @@ class HeaderCartManager {
         if (items.length > 5) {
             const moreElement = document.createElement('div');
             moreElement.className = 'list-group-item text-center cart-item-mini';
-            moreElement.innerHTML = `<small class="text-muted">و ${items.length - 5} محصول دیگر...</small>`;
+            moreElement.innerHTML = `
+                <small class="text-muted">و ${items.length - 5} محصول دیگر...</small>
+                <br>
+                <a href="" class="btn btn-link btn-sm p-0 mt-1">مشاهده همه</a>
+            `;
             this.cartItemsContainer.appendChild(moreElement);
         }
         
         // Update total price
-        this.cartTotalPrice.textContent = this.formatPrice(totals.effective_total);
+        this.cartTotalPrice.textContent = this.formatPrice(totals.total_amount);
     }
     
     createCartItemElement(item) {
@@ -352,14 +400,14 @@ class HeaderCartManager {
                 <div class="me-2">
                     ${item.product_image 
                         ? `<img src="${item.product_image}" alt="${item.product_name}" class="cart-item-image-mini">` 
-                        : `<div class="cart-item-image-mini bg-light d-flex align-items-center justify-content-center"><i class="fas fa-image text-muted"></i></div>`
+                        : `<div class="cart-item-image-mini bg-light d-flex align-items-center justify-content-center"><i class="fas fa-pills text-muted"></i></div>`
                     }
                 </div>
                 <div class="flex-grow-1 cart-item-details">
                     <h6 class="text-truncate" style="max-width: 180px;" title="${item.product_name}">${item.product_name}</h6>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="cart-item-quantity">${item.quantity} عدد</span>
-                        <span class="cart-item-price">${this.formatPrice(item.effective_line_total)}</span>
+                        <span class="cart-item-price">${this.formatPrice(item.line_total)}</span>
                     </div>
                     ${item.has_discount ? '<span class="badge bg-success badge-sm">تخفیف‌دار</span>' : ''}
                 </div>
@@ -376,11 +424,15 @@ class HeaderCartManager {
     }
     
     showLoading() {
-        this.cartLoading.classList.remove('d-none');
+        if (this.cartLoading) {
+            this.cartLoading.classList.remove('d-none');
+        }
     }
     
     hideLoading() {
-        this.cartLoading.classList.add('d-none');
+        if (this.cartLoading) {
+            this.cartLoading.classList.add('d-none');
+        }
     }
     
     formatPrice(price) {
@@ -390,7 +442,10 @@ class HeaderCartManager {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Only initialize cart if user is authenticated
+    {% if user.is_authenticated %}
     window.headerCartManager = new HeaderCartManager();
+    {% endif %}
 });
 
 // Cart update event dispatcher (to be called from other pages when cart is modified)
