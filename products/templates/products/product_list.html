@@ -48,177 +48,171 @@ Page content START -->
         <div class="row g-4">
           {% for product in products %}
           <!-- Card Item START -->
-<div class="col-md-6 col-xl-4">
-  <div class="card p-2 shadow h-100">
-    <div class="rounded-top overflow-hidden position-relative">
-      <div class="card-overlay-hover">
-        <!-- Image -->
-        {% if product.image %}
-          <img
-            src="{{ product.image.url }}"
-            class="card-img-top"
-            alt="{{ product.name }}"
-            style="height: 200px; object-fit: cover;"
-          />
-        {% else %}
-          <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
-            <i class="fas fa-pills fa-3x text-muted"></i>
-          </div>
-        {% endif %}
-      </div>
-      
-      <!-- Discount Badge -->
-      {% if product.has_discount %}
-        <div class="position-absolute top-0 start-0 m-2">
-          {% if product.discount_percent > 0 %}
-            <span class="badge bg-danger">{{ product.discount_percent }}% تخفیف</span>
-          {% endif %}
-          {% if product.discount_per_unit > 0 %}
-            <span class="badge bg-warning text-dark">{{ product.discount_per_unit|floatformat:0 }} ریال تخفیف</span>
-          {% endif %}
-        </div>
-      {% endif %}
-      
-      <!-- Stock Status Badge -->
-      <div class="position-absolute top-0 end-0 m-2">
-        {% if product.quantity == 0 %}
-          <span class="badge bg-secondary">ناموجود</span>
-        {% elif product.low_stock %}
-          <span class="badge bg-warning text-dark">موجودی کم</span>
-        {% else %}
-          <span class="badge bg-success">موجود</span>
-        {% endif %}
-      </div>
-      
-      <!-- Hover element -->
-      <div class="card-img-overlay">
-        <div class="card-element-hover d-flex justify-content-end align-items-end h-100">
-          <div class="d-flex gap-2">
-            <!-- View Product Button -->
-            <a href="{% url 'products:product_detail' slug=product.slug %}" 
-               class="icon-md bg-white rounded-circle text-center d-flex align-items-center justify-content-center">
-              <i class="fas fa-eye text-primary"></i>
-            </a>
+        <div class="col-md-6 col-xl-4">
+        <div class="card p-2 shadow h-100">
+            <div class="rounded-top overflow-hidden position-relative">
+            <div class="card-overlay-hover">
+                <!-- Image -->
+                <img
+                    src="{{ product.image.url }}"
+                    class="card-img-top"
+                    alt="{{ product.name }}"
+                    style="height: 200px; object-fit: cover;"
+                />
+            </div>
             
-            <!-- Add to Cart Button -->
-            {% if product.is_available %}
-              <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="d-inline">
-                {% csrf_token %}
-                <input type="hidden" name="quantity" value="1">
-                <button type="submit" 
-                        class="icon-md bg-white rounded-circle text-center border-0 d-flex align-items-center justify-content-center"
-                        title="افزودن به سبد خرید">
-                  <i class="fas fa-shopping-cart text-success"></i>
-                </button>
-              </form>
-            {% else %}
-              <button class="icon-md bg-white rounded-circle text-center border-0 d-flex align-items-center justify-content-center"
-                      disabled
-                      title="محصول موجود نیست">
-                <i class="fas fa-times text-muted"></i>
-              </button>
-            {% endif %}
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Card body -->
-    <div class="card-body d-flex flex-column">
-      <!-- Category and SKU -->
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        {% if product.category %}
-          <a href="" 
-             class="badge bg-info bg-opacity-10 text-info text-decoration-none">
-            <i class="fas fa-tag small fw-bold me-1"></i> {{ product.category.name }}
-          </a>
-        {% endif %}
-        
-        {% if product.recommended %}
-          <span class="badge bg-primary bg-opacity-10 text-primary">
-            <i class="fas fa-star small fw-bold me-1"></i> پیشنهادی
-          </span>
-        {% endif %}
-      </div>
-      
-      <!-- Title -->
-      <h5 class="card-title fw-normal mb-2">
-        <a href="{% url 'products:product_detail' slug=product.slug %}" 
-           class="text-decoration-none text-dark">
-          {{ product.name }}
-        </a>
-      </h5>
-      
-      <!-- Product SKU -->
-      <p class="text-muted small mb-2">کد محصول: {{ product.sku }}</p>
-      
-      <!-- Stock Info -->
-      <div class="mb-3">
-        {% if product.quantity > 0 %}
-          {% if product.low_stock %}
-            <small class="text-warning">
-              <i class="fas fa-exclamation-triangle me-1"></i>
-              تنها {{ product.quantity }} عدد باقی مانده
-            </small>
-          {% else %}
-            <small class="text-success">
-              <i class="fas fa-check-circle me-1"></i>
-              {{ product.quantity }} عدد موجود
-            </small>
-          {% endif %}
-        {% else %}
-          <small class="text-danger">
-            <i class="fas fa-times-circle me-1"></i>
-            ناموجود
-          </small>
-        {% endif %}
-      </div>
-      
-      <!-- Price Section -->
-      <div class="mt-auto">
-        <div class="d-flex justify-content-between align-items-center">
-          <!-- Quick Add Controls -->
-          <div class="d-flex align-items-center gap-2">
-            {% if product.is_available %}
-              <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="d-flex align-items-center gap-2">
-                {% csrf_token %}
-                <div class="input-group" style="width: 90px;">
-                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity(this)">-</button>
-                  <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" 
-                         class="form-control form-control-sm text-center quantity-input">
-                  <button type="button" class="btn btn-outline-secondary btn-sm" onclick="increaseQuantity(this)">+</button>
-                </div>
-                <button type="submit" class="btn btn-success btn-sm">
-                  <i class="fas fa-plus"></i>
-                </button>
-              </form>
-            {% endif %}
-          </div>
-          
-          <!-- Price -->
-          <div class="text-end">
+            <!-- Discount Badge -->
             {% if product.has_discount %}
-              <div class="text-decoration-line-through text-muted small">
-                {{ product.unit_price|floatformat:0 }} ریال
-              </div>
-              <h3 class="text-success mb-0 fs-5 fw-bold">
-                {{ product.effective_unit_price|floatformat:0 }} ریال
-              </h3>
-              <small class="text-success">
-                صرفه‌جویی: {{ product.unit_price|floatformat:0|floatformat:0 }} ریال
-              </small>
-            {% else %}
-              <h3 class="text-success mb-0 fs-5 fw-bold">
-                {{ product.unit_price|floatformat:0 }} ریال
-              </h3>
+                <div class="position-absolute top-0 start-0 m-2">
+                {% if product.discount_percent > 0 %}
+                    <span class="badge bg-danger">{{ product.discount_percent }}% تخفیف</span>
+                {% endif %}
+                {% if product.discount_per_unit > 0 %}
+                    <span class="badge bg-warning text-dark">{{ product.discount_per_unit|floatformat:0 }} ریال تخفیف</span>
+                {% endif %}
+                </div>
             {% endif %}
-          </div>
+            
+            <!-- Stock Status Badge -->
+            <div class="position-absolute top-0 end-0 m-2">
+                {% if product.quantity == 0 %}
+                <span class="badge bg-secondary">ناموجود</span>
+                {% elif product.low_stock %}
+                <span class="badge bg-warning text-dark">موجودی کم</span>
+                {% else %}
+                <span class="badge bg-success">موجود</span>
+                {% endif %}
+            </div>
+            
+            <!-- Hover element -->
+            <div class="card-img-overlay">
+                <div class="card-element-hover d-flex justify-content-end align-items-end h-100">
+                <div class="d-flex gap-2">
+                    <!-- View Product Button -->
+                    <a href="{% url 'products:product_detail' slug=product.slug %}" 
+                    class="icon-md bg-white rounded-circle text-center d-flex align-items-center justify-content-center">
+                    <i class="fas fa-eye text-primary"></i>
+                    </a>
+                    
+                    <!-- Add to Cart Button -->
+                    {% if product.is_available %}
+                    <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="quantity" value="1">
+                        <button type="submit" 
+                                class="icon-md bg-white rounded-circle text-center border-0 d-flex align-items-center justify-content-center"
+                                title="افزودن به سبد خرید">
+                        <i class="fas fa-shopping-cart text-success"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <button class="icon-md bg-white rounded-circle text-center border-0 d-flex align-items-center justify-content-center"
+                            disabled
+                            title="محصول موجود نیست">
+                        <i class="fas fa-times text-muted"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+            </div>
+            
+            <!-- Card body -->
+            <div class="card-body d-flex flex-column">
+            <!-- Category and SKU -->
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                {% if product.category %}
+                <a href="" 
+                    class="badge bg-info bg-opacity-10 text-info text-decoration-none">
+                    <i class="fas fa-tag small fw-bold me-1"></i> {{ product.category.name }}
+                </a>
+                {% endif %}
+                
+                {% if product.recommended %}
+                <span class="badge bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-star small fw-bold me-1"></i> پیشنهادی
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Title -->
+            <h5 class="card-title fw-normal mb-2">
+                <a href="{% url 'products:product_detail' slug=product.slug %}" 
+                class="text-decoration-none text-dark">
+                {{ product.name }}
+                </a>
+            </h5>
+            
+            <!-- Product SKU -->
+            <p class="text-muted small mb-2">کد محصول: {{ product.sku }}</p>
+            
+            <!-- Stock Info -->
+            <div class="mb-3">
+                {% if product.quantity > 0 %}
+                {% if product.low_stock %}
+                    <small class="text-warning">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    تنها {{ product.quantity }} عدد باقی مانده
+                    </small>
+                {% else %}
+                    <small class="text-success">
+                    <i class="fas fa-check-circle me-1"></i>
+                    {{ product.quantity }} عدد موجود
+                    </small>
+                {% endif %}
+                {% else %}
+                <small class="text-danger">
+                    <i class="fas fa-times-circle me-1"></i>
+                    ناموجود
+                </small>
+                {% endif %}
+            </div>
+            
+            <!-- Price Section -->
+            <div class="mt-auto">
+                <div class="d-flex justify-content-between align-items-center">
+                <!-- Quick Add Controls -->
+                <div class="d-flex align-items-center gap-2">
+                    {% if product.is_available %}
+                    <form method="post" action="{% url 'orders:add_to_cart' product.id %}" class="d-flex align-items-center gap-2">
+                        {% csrf_token %}
+                        <div class="input-group" style="width: 90px;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="decreaseQuantity(this)">-</button>
+                        <input type="number" name="quantity" value="1" min="1" max="{{ product.quantity }}" 
+                                class="form-control form-control-sm text-center quantity-input">
+                        <button type="button" class="btn btn-outline-secondary btn-sm" onclick="increaseQuantity(this)">+</button>
+                        </div>
+                        <button type="submit" class="btn btn-success btn-sm">
+                        <i class="fas fa-plus"></i>
+                        </button>
+                    </form>
+                    {% endif %}
+                </div>
+                
+                <!-- Price -->
+                <div class="text-end">
+                    {% if product.has_discount %}
+                    <div class="text-decoration-line-through text-muted small">
+                        {{ product.unit_price|floatformat:0 }} ریال
+                    </div>
+                    <h3 class="text-success mb-0 fs-5 fw-bold">
+                        {{ product.effective_unit_price|floatformat:0 }} ریال
+                    </h3>
+                    <small class="text-success">
+                        صرفه‌جویی: {{ product.unit_price|floatformat:0|floatformat:0 }} ریال
+                    </small>
+                    {% else %}
+                    <h3 class="text-success mb-0 fs-5 fw-bold">
+                        {{ product.unit_price|floatformat:0 }} ریال
+                    </h3>
+                    {% endif %}
+                </div>
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- Card Item END -->
+        </div>
+        <!-- Card Item END -->
 
 
 

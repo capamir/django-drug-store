@@ -1,0 +1,266 @@
+{% extends 'profile-base.html' %}
+{% load static %}
+{% load humanize %}
+
+{% block title %}تکمیل سفارش{% endblock %}
+
+{% block content %}
+<!-- Main content START -->
+<div class="col-xl-9">
+    <!-- Card START -->
+    <div class="card border bg-transparent rounded-3">
+        <!-- Card header START -->
+        <div class="card-header bg-transparent border-bottom">
+            <h3 class="mb-0 fs-5 ff-vb">تکمیل سفارش</h3>
+        </div>
+        <!-- Card header END -->
+
+        <!-- Card body START -->
+        <div class="card-body">
+            {% if cart_items %}
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <!-- Order Details Section -->
+                        <div class="col-lg-8">
+                            <!-- Address Selection START -->
+                            <div class="card bg-light mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-map-marker-alt me-2"></i>آدرس ارسال
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    {% if user_addresses %}
+                                        <div class="mb-3">
+                                            <label for="address_id" class="form-label">انتخاب آدرس:</label>
+                                            <select name="address_id" id="address_id" class="form-select" required>
+                                                <option value="">-- انتخاب آدرس --</option>
+                                                {% for address in user_addresses %}
+                                                <option value="{{ address.id }}" 
+                                                        {% if default_address and address.id == default_address.id %}selected{% endif %}>
+                                                    {{ address.title }} - {{ address.get_full_address }}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    {% else %}
+                                        <div class="alert alert-warning">
+                                            <i class="fas fa-exclamation-triangle me-2"></i>
+                                            شما هنوز آدرسی ثبت نکرده‌اید. 
+                                            {% comment %} <a href="{% url 'users:add_address' %}" class="alert-link">افزودن آدرس جدید</a> {% endcomment %}
+                                            <a href="" class="alert-link">افزودن آدرس جدید</a>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <!-- Address Selection END -->
+
+                            <!-- Customer Notes START -->
+                            <div class="card bg-light mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-sticky-note me-2"></i>یادداشت سفارش
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <textarea name="customer_notes" 
+                                              id="customer_notes" 
+                                              class="form-control" 
+                                              rows="3" 
+                                              placeholder="در صورت نیاز یادداشت خود را وارد کنید..."></textarea>
+                                    <small class="text-muted">این یادداشت برای فروشنده قابل مشاهده خواهد بود.</small>
+                                </div>
+                            </div>
+                            <!-- Customer Notes END -->
+
+                            <!-- Order Items Review START -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-list me-2"></i>بررسی محصولات
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead class="table-light">
+                                                <tr>
+                                                    <th>محصول</th>
+                                                    <th class="text-center">تعداد</th>
+                                                    <th class="text-center">قیمت واحد</th>
+                                                    <th class="text-center">قیمت کل</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in cart_items %}
+                                                <tr>
+                                                    <!-- Product info -->
+                                                    <td>
+                                                        <div class="d-flex align-items-center">
+                                                            {% if item.product.image %}
+                                                            <img src="{{ item.product.image.url }}" 
+                                                                 alt="{{ item.product.name }}" 
+                                                                 class="rounded me-3" 
+                                                                 style="width: 40px; height: 40px; object-fit: cover;">
+                                                            {% endif %}
+                                                            <div>
+                                                                <h6 class="mb-0">{{ item.product.name }}</h6>
+                                                                <small class="text-muted">کد: {{ item.product.sku }}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    
+                                                    <!-- Quantity -->
+                                                    <td class="text-center">
+                                                        <span class="badge bg-secondary">{{ item.quantity }}</span>
+                                                    </td>
+                                                    
+                                                    <!-- Unit price -->
+                                                    <td class="text-center">
+                                                        {% if item.product.has_discount %}
+                                                            <span class="text-decoration-line-through text-muted small">
+                                                                {{ item.product.unit_price|floatformat:0|intcomma }}
+                                                            </span><br>
+                                                            <span class="text-success fw-bold">
+                                                                {{ item.product.effective_unit_price|floatformat:0|intcomma }}
+                                                            </span>
+                                                        {% else %}
+                                                            <span class="fw-bold">{{ item.product.unit_price|floatformat:0|intcomma }}</span>
+                                                        {% endif %}
+                                                        تومان
+                                                    </td>
+                                                    
+                                                    <!-- Total price -->
+                                                    <td class="text-center fw-bold">
+                                                        {{ item.line_total|floatformat:0|intcomma }} تومان
+                                                    </td>
+                                                </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Order Items Review END -->
+                        </div>
+
+                        <!-- Order Summary Section -->
+                        <div class="col-lg-4">
+                            <!-- Order Summary START -->
+                            <div class="card bg-light position-sticky" style="top: 120px;">
+                                <div class="card-header">
+                                    <h5 class="mb-0">
+                                        <i class="fas fa-receipt me-2"></i>خلاصه سفارش
+                                    </h5>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Summary items -->
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>جمع کل ({{ cart_totals.total_items }} قلم):</span>
+                                        <span>{{ cart_totals.subtotal|floatformat:0|intcomma }} تومان</span>
+                                    </div>
+
+                                    {% if cart_totals.has_discount %}
+                                    <div class="d-flex justify-content-between mb-2 text-success">
+                                        <span>تخفیف:</span>
+                                        <span>-{{ cart_totals.discount_amount|floatformat:0|intcomma }} تومان</span>
+                                    </div>
+                                    {% endif %}
+
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span>هزینه ارسال:</span>
+                                        <span>
+                                            {% if cart_totals.shipping_cost > 0 %}
+                                                {{ cart_totals.shipping_cost|floatformat:0|intcomma }} تومان
+                                            {% else %}
+                                                <span class="text-success">رایگان</span>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+
+                                    <hr>
+
+                                    <div class="d-flex justify-content-between mb-3">
+                                        <strong>مجموع قابل پرداخت:</strong>
+                                        <strong class="text-primary fs-5">{{ cart_totals.total_amount|floatformat:0|intcomma }} تومان</strong>
+                                    </div>
+
+                                    <!-- Action buttons -->
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-success btn-lg">
+                                            <i class="fas fa-credit-card me-2"></i>تایید و پرداخت
+                                        </button>
+                                        
+                                        <a href="{% url 'orders:cart_detail' %}" class="btn btn-outline-secondary">
+                                            <i class="fas fa-arrow-right me-2"></i>بازگشت به سبد خرید
+                                        </a>
+                                    </div>
+
+                                    <!-- Additional info -->
+                                    <div class="mt-3 pt-3 border-top">
+                                        <small class="text-muted">
+                                            <i class="fas fa-shield-alt me-1"></i>
+                                            خرید شما محفوظ و امن است
+                                        </small><br>
+                                        <small class="text-muted">
+                                            <i class="fas fa-truck me-1"></i>
+                                            ارسال رایگان برای خریدهای بالای ۵۰۰,۰۰۰ تومان
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Order Summary END -->
+                        </div>
+                    </div>
+                </form>
+
+            {% else %}
+                <!-- Empty cart message START -->
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-4x text-muted mb-3"></i>
+                    <h4 class="mb-3">سبد خرید شما خالی است</h4>
+                    <p class="text-muted mb-4">
+                        برای تکمیل سفارش ابتدا محصولاتی به سبد خرید خود اضافه کنید.
+                    </p>
+                    <a href="{% url 'products:product_list' %}" class="btn btn-primary">
+                        <i class="fas fa-pills me-2"></i>شروع خرید
+                    </a>
+                </div>
+                <!-- Empty cart message END -->
+            {% endif %}
+        </div>
+        <!-- Card body END -->
+    </div>
+    <!-- Card END -->
+</div>
+<!-- Main content END -->
+
+<!-- JavaScript for checkout functionality -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Form validation
+    const form = document.querySelector('form');
+    const addressSelect = document.getElementById('address_id');
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (addressSelect && !addressSelect.value) {
+                e.preventDefault();
+                alert('لطفاً آدرس ارسال را انتخاب کنید.');
+                addressSelect.focus();
+                return false;
+            }
+            
+            // Show loading state
+            const submitBtn = form.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>در حال پردازش...';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}
