@@ -83,6 +83,7 @@ class CartDetailView(LoginRequiredMixin, DetailView):
     def get_object(self, queryset=None):
         """Get or create cart for user"""
         cart, created = Cart.objects.get_or_create(user=self.request.user)
+        print(f"Cart created: {created}, Cart ID: {cart.id}")
         return cart
     
     def get_context_data(self, **kwargs):
@@ -92,11 +93,17 @@ class CartDetailView(LoginRequiredMixin, DetailView):
         # Get cart items with product data
         cart_items = cart.items.select_related('product')
         
+        # DEBUG: Print cart items count
+        print(f"Cart items count: {cart_items.count()}")
+        for item in cart_items:
+            print(f"Item: {item.product.name}, Quantity: {item.quantity}")
+        
         # Clean up unavailable items
         self.cleanup_unavailable_items(cart_items)
         
         # Refresh cart items after cleanup
         cart_items = cart.items.select_related('product')
+        print(f"Cart items after cleanup: {cart_items.count()}")
         
         # Calculate cart totals
         cart_totals = self.calculate_cart_totals(cart_items)
