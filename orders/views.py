@@ -161,3 +161,38 @@ class CartDetailView(LoginRequiredMixin, DetailView):
             'total_items': total_items,
             'has_discount': total_discount > 0,
         }
+
+class UpdateCartItemView(LoginRequiredMixin, View):
+    """Update quantity of cart item"""
+    
+    def post(self, request, item_id):
+        cart_item = get_object_or_404(
+            CartItem,
+            id=item_id,
+            cart__user=request.user
+        )
+        
+        new_quantity = int(request.POST.get('quantity', 1))
+        
+        # Validate quantity
+        if new_quantity < 1:
+            messages.error(request, 'تعداد محصول باید حداقل 1 باشد.')
+            return redirect('orders:cart_detail')
+        
+        if new_quantity > cart_item.product.quantity:
+            messages.error(
+                request,
+                f'تنها {cart_item.product.quantity} عدد از "{cart_item.product.name}" موجود است.'
+            )
+            return redirect('orders:cart_detail')
+        
+        # Update quantity
+        cart_item.quantity = new_quantity
+        cart_item.save()
+        
+        messages.success(
+            request,
+            f'تعداد "{cart_item.product.name}" به {new_quantity} عدد تغییر یافت.'
+        )
+        
+        return redirect('orders:cart_detail')
